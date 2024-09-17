@@ -1,30 +1,37 @@
 package com.insightfinder.service;
 
+import static com.insightfinder.GrpcServer.METADATA_KEY;
+
 import com.insightfinder.GrpcServer;
 import com.insightfinder.model.message.Message;
+import com.insightfinder.util.ParseUtil;
 import io.grpc.Metadata;
 import io.grpc.stub.StreamObserver;
-import io.opentelemetry.proto.collector.trace.v1.*;
-import io.opentelemetry.proto.trace.v1.*;
-import org.slf4j.*;
-import com.insightfinder.util.ParseUtil;
-
-import static com.insightfinder.GrpcServer.METADATA_KEY;
+import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
+import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceResponse;
+import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc;
+import io.opentelemetry.proto.trace.v1.ResourceSpans;
+import io.opentelemetry.proto.trace.v1.ScopeSpans;
+import io.opentelemetry.proto.trace.v1.Span;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GrpcTraceService extends TraceServiceGrpc.TraceServiceImplBase {
 
   private static final Logger LOG = LoggerFactory.getLogger(GrpcTraceService.class);
+  private final JaegerService jaegerService = JaegerService.getInstance();
 
   @Override
-  public void export(ExportTraceServiceRequest request, StreamObserver<ExportTraceServiceResponse> responseObserver) {
+  public void export(ExportTraceServiceRequest request,
+      StreamObserver<ExportTraceServiceResponse> responseObserver) {
 
-    LOG.info("Received trace data from user {}.", ParseUtil.getIfUserFromMetadata(METADATA_KEY.get()));
+    LOG.info("Received trace data from user {}.",
+        ParseUtil.getIfUserFromMetadata(METADATA_KEY.get()));
 
     // Extract trace data body
     exportSpanData(request);
 
     // Send Trace to Jaeger
-    JaegerService jaegerService = new JaegerService("111.111.111.111",false,4317,16686);
     jaegerService.saveTraceData(request);
 
     // Send a response back to the client
@@ -39,14 +46,14 @@ public class GrpcTraceService extends TraceServiceGrpc.TraceServiceImplBase {
     String ifProject = ParseUtil.getProjectFromMedata(metadata);
     String ifLicenseKey = ParseUtil.getLicenseKeyFromMedata(metadata);
 
-    if(ifUser == null || ifUser.isEmpty()){
+    if (ifUser == null || ifUser.isEmpty()) {
       LOG.error("'ifuser' header of OpenTelemetry exporter.");
 
     }
-    if(ifProject == null || ifProject.isEmpty()){
+    if (ifProject == null || ifProject.isEmpty()) {
       LOG.error("'ifproject' header of OpenTelemetry exporter.");
     }
-    if(ifLicenseKey == null || ifLicenseKey.isEmpty()){
+    if (ifLicenseKey == null || ifLicenseKey.isEmpty()) {
       LOG.error("'iflicenseKey' header of OpenTelemetry exporter.");
     }
 
@@ -55,7 +62,7 @@ public class GrpcTraceService extends TraceServiceGrpc.TraceServiceImplBase {
         for (Span rawSpan : scopeSpans.getSpansList()) {
           var traceID = ParseUtil.parseHexadecimalBytes(rawSpan.getTraceId());
 
-          GrpcServer.queue.offer(new Message(traceID,ifUser,ifProject,ifLicenseKey));
+          GrpcServer.queue.offer(new Message(traceID, ifUser, ifProject, ifLicenseKey));
         }
       }
     }

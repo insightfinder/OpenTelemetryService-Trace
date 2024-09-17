@@ -1,56 +1,69 @@
 package com.insightfinder;
+
+import com.insightfinder.config.Config;
 import com.insightfinder.model.message.Message;
+import com.insightfinder.service.GrpcTraceService;
 import com.insightfinder.service.UniqueDelayQueueService;
 import com.insightfinder.worker.TraceWorker;
-import io.grpc.*;
 import io.grpc.Context;
-import org.slf4j.*;
-import com.insightfinder.service.GrpcTraceService;
+import io.grpc.Contexts;
+import io.grpc.Metadata;
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.ServerCall;
+import io.grpc.ServerCallHandler;
+import io.grpc.ServerInterceptor;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class GrpcServer{
+@Slf4j
+public class GrpcServer {
 
   private static final Logger LOG = LoggerFactory.getLogger(GrpcServer.class);
   public static final Context.Key<Metadata> METADATA_KEY = Context.key("metadata");
   public static UniqueDelayQueueService<Message> queue = new UniqueDelayQueueService<>();
-  public static final ConcurrentHashMap<String,Boolean> projectLocalCache = new ConcurrentHashMap<>();
+  public static final ConcurrentHashMap<String, Boolean> projectLocalCache = new ConcurrentHashMap<>();
+  private static final Config config = Config.getInstance();
+
 
   public static void main(String[] args) throws Exception {
-
-
     // Start Workers
-    int workerNum = 1;
-    ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
-    for(int i = 0; i < workerNum; i++){
-      executorService.submit(new TraceWorker(i));
-      LOG.info("Worker %d started.".formatted(i));
-    }
+    int workerNum = config.getAppTraceWorkerNum();
+    try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
+      for (int i = 0; i < workerNum; i++) {
+        executorService.submit(new TraceWorker(i));
+        log.info("Worker {} started", i);
 
+        // Services
+        GrpcTraceService traceService = new GrpcTraceService();
 
-    // Services
-    GrpcTraceService traceService = new GrpcTraceService();
+        // Interception
+        GrpcInterceptionService interceptor = new GrpcInterceptionService();
 
-    // Interception
-    GrpcInterceptionService interceptor = new GrpcInterceptionService();
-
-    LOG.info("Starting OTLP Trace Receiver...");
-    Server server = ServerBuilder.forPort(4317)
+        log.info("Starting OTLP Trace Receiver...");
+        Server server = ServerBuilder.forPort(config.getGrpcPort())
             .addService(traceService)
             .intercept(interceptor) // Add the interceptor to store metadata
-            .maxInboundMessageSize(16 * 1024 * 1024)
+            .maxInboundMessageSize(config.getGrpcMaxInboundMessageSizeInKB() * 1024)
             .build();
-    server.start();
-    LOG.info("OTLP Trace Receiver started at port 4317");
+        server.start();
+        log.info("OTLP Trace Receiver started at port {}", config.getGrpcPort());
 
-    server.awaitTermination();
+        server.awaitTermination();
+      }
+    }
   }
 
   // Interception Service that stores metadata in the context
-  static class GrpcInterceptionService  implements ServerInterceptor {
+  static class GrpcInterceptionService implements ServerInterceptor {
+
     @Override
-    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall, Metadata metadata, ServerCallHandler<ReqT, RespT> serverCallHandler) {
+    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
+        Metadata metadata, ServerCallHandler<ReqT, RespT> serverCallHandler) {
       Context context = Context.current().withValue(METADATA_KEY, metadata);
       return Contexts.interceptCall(context, serverCall, metadata, serverCallHandler);
     }

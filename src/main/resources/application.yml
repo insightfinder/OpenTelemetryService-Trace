@@ -1,0 +1,26 @@
+grpc:
+  port: 4317
+  maxInboundMessageSizeInKB: 16384
+
+insightFinder:
+  username: username
+  serverUrl: https://stg.insightfinder.com
+  serverUri: /api/v1/customprojectrawdata
+  checkAndCreateUri: /api/v1/check-and-add-custom-project
+  licenseKey: licenseKey
+
+jaeger:
+  serverName: 18.212.200.99
+  tlsEnabled: true
+  grpcPort: 4317
+  uiPort: 16686
+
+app:
+  traceWorkerNum: 5
+  tls:
+    enabled: false
+    # Path to full-chain certificate file (PEM)
+    certificateFile: ""
+    # Path to the private key file.
+    privateKeyFile: ""
+
