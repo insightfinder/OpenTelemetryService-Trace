@@ -17,13 +17,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Slf4j
 public class GrpcServer {
 
-  private static final Logger LOG = LoggerFactory.getLogger(GrpcServer.class);
   public static final Context.Key<Metadata> METADATA_KEY = Context.key("metadata");
   public static UniqueDelayQueueService<Message> queue = new UniqueDelayQueueService<>();
   public static final ConcurrentHashMap<String, Boolean> projectLocalCache = new ConcurrentHashMap<>();
