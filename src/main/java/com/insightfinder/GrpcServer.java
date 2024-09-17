@@ -13,7 +13,6 @@ import io.grpc.ServerBuilder;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +22,6 @@ public class GrpcServer {
 
   public static final Context.Key<Metadata> METADATA_KEY = Context.key("metadata");
   public static UniqueDelayQueueService<Message> queue = new UniqueDelayQueueService<>();
-  public static final ConcurrentHashMap<String, Boolean> projectLocalCache = new ConcurrentHashMap<>();
   private static final Config config = Config.getInstance();
 
 
