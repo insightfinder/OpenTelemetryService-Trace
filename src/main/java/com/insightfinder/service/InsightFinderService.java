@@ -68,7 +68,7 @@ public class InsightFinderService {
     return projectCache.containsKey(projectName);
   }
 
-  public boolean isProjectExisted(String projectName) {
+  private boolean isProjectExisted(String projectName) {
     return projectCache.containsKey(projectName);
   }
 

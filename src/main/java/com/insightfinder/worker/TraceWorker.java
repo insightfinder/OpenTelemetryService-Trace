@@ -41,18 +41,9 @@ public class TraceWorker implements Runnable {
           message.ifProject, message.ifUser);
 
       // Create Project IfNotExist and save the result to cache.
-      if (GrpcServer.projectLocalCache.get(message.ifProject) == null) {
-        boolean isProjectCreated = insightFinderService.isProjectCreated(message.ifProject,
-            message.ifProject, message.ifUser, message.ifLicenseKey);
-        if (isProjectCreated) {
-          log.info("Project '{}' created successfully for user '{}'", message.ifProject,
-              message.ifUser);
-          GrpcServer.projectLocalCache.putIfAbsent(message.ifProject, true);
-        } else {
-          log.info("Fail to create the project '{}' for user '{}'", message.ifProject,
-              message.ifUser);
-          continue;
-        }
+      if (!insightFinderService.isProjectCreated(message.ifProject, message.ifProject,
+          message.ifUser, message.ifLicenseKey)) {
+        continue;
       }
 
       // Get Trace data from Jaeger
