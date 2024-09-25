@@ -5,7 +5,7 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-public class IFLogDataReceivePayload {
+public class IFLogTraceDataReceivePayload {
 
   @JSONField(name = "userName")
   private String userName;
@@ -16,8 +16,8 @@ public class IFLogDataReceivePayload {
   @JSONField(name = "licenseKey")
   private String licenseKey;
 
-  @JSONField(name = "metricData")
-  private List<IFLogDataPayload> logDataList;
+  @JSONField(name = "logTraceData")
+  private List<IFLogTraceDataPayload> logTraceDataList;
 
   @JSONField(name = "agentType")
   private String insightAgentType;

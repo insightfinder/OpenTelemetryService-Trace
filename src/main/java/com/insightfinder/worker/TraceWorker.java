@@ -46,7 +46,7 @@ public class TraceWorker implements Runnable {
 
       var traceDataBody = traceDataMapper.fromRawJaegerData(rawJaegerData, traceInfo);
       if (traceDataBody != null) {
-        insightFinderService.sendData(traceDataBody, traceInfo);
+        insightFinderService.sendTraceData(traceDataBody, traceInfo);
         log.info("Sent trace '{}' to project '{}' for user '{}'.",
             traceInfo.traceId, traceInfo.ifProject, traceInfo.ifUser);
       }

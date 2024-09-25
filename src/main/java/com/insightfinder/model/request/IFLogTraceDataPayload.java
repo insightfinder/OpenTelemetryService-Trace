@@ -4,7 +4,7 @@ import com.alibaba.fastjson2.annotation.JSONField;
 import lombok.Data;
 
 @Data
-public class IFLogDataPayload {
+public class IFLogTraceDataPayload {
 
   @JSONField(name = "timestamp")
   private long timeStamp;

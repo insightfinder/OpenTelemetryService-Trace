@@ -13,8 +13,8 @@ import static com.insightfinder.config.WebClientConstant.HTTP_REQUEST_PARAM_USER
 import com.alibaba.fastjson2.JSON;
 import com.insightfinder.config.Config;
 import com.insightfinder.model.message.TraceInfo;
-import com.insightfinder.model.request.IFLogDataPayload;
-import com.insightfinder.model.request.IFLogDataReceivePayload;
+import com.insightfinder.model.request.IFLogTraceDataPayload;
+import com.insightfinder.model.request.IFLogTraceDataReceivePayload;
 import com.insightfinder.model.request.TraceDataBody;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -152,22 +152,22 @@ public class InsightFinderService {
     }
   }
 
-  public void sendData(TraceDataBody traceDataBody, TraceInfo traceInfo) {
-    var iFLogData = new IFLogDataPayload();
-    var iFPayload = new IFLogDataReceivePayload();
+  public void sendTraceData(TraceDataBody traceDataBody, TraceInfo traceInfo) {
+    var iFLogTraceData = new IFLogTraceDataPayload();
+    var iFPayload = new IFLogTraceDataReceivePayload();
 
-    iFLogData.setData(traceDataBody);
-    iFLogData.setTimeStamp(traceDataBody.startTime);
+    iFLogTraceData.setData(traceDataBody);
+    iFLogTraceData.setTimeStamp(traceDataBody.startTime);
     var instanceName = traceDataBody.getServiceName();
-    iFLogData.setTag(instanceName);
+    iFLogTraceData.setTag(instanceName);
     if (instanceName != null && !instanceName.isEmpty()) {
-      iFLogData.setComponentName(instanceName);
+      iFLogTraceData.setComponentName(instanceName);
     }
-    iFPayload.setLogDataList(new ArrayList<>(List.of(iFLogData)));
+    iFPayload.setLogTraceDataList(new ArrayList<>(List.of(iFLogTraceData)));
     iFPayload.setUserName(traceInfo.ifUser);
     iFPayload.setLicenseKey(traceInfo.ifLicenseKey);
     iFPayload.setProjectName(traceInfo.ifProject);
-    iFPayload.setInsightAgentType("LogStreaming");
+    iFPayload.setInsightAgentType("LogTrace");
 
     log.info(JSON.toJSONString(iFPayload));
     RequestBody body = RequestBody.create(JSON.toJSONBytes(iFPayload),
