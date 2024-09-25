@@ -17,6 +17,7 @@ jaeger:
 
 app:
   traceWorkerNum: 5
+  traceDelayInMillis: 60000
   tls:
     enabled: false
     # Path to full-chain certificate file (PEM)

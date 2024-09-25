@@ -60,6 +60,10 @@ public class Config {
     return getAppConfig().getTraceWorkerNum();
   }
 
+  public long getDelay() {
+    return getAppConfig().getDelay();
+  }
+
   public int getGrpcPort() {
     return getGrpcConfig().getPort();
   }

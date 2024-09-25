@@ -8,33 +8,34 @@ import lombok.Data;
 
 @Data
 public class TraceDataBody {
-    @JSONField(name = "traceID")
-    public String traceID;
 
-    @JSONField(name = "serviceName")
-    public String serviceName;
+  @JSONField(name = "traceID")
+  public String traceID;
 
-    @JSONField(name = "startTime")
-    public long startTime;
+  @JSONField(name = "serviceName")
+  public String serviceName;
 
-    @JSONField(name = "endTime")
-    public long endTime;
+  @JSONField(name = "startTime")
+  public long startTime;
 
-    @JSONField(name = "duration")
-    public long duration;
+  @JSONField(name = "endTime")
+  public long endTime;
 
-    @JSONField(name = "spans")
-    public Map<String,SpanDataBody> spans;
+  @JSONField(name = "duration")
+  public long duration;
 
-    @JSONField(name = "processes")
-    public JSONObject processes;
+  @JSONField(name = "spans")
+  public Map<String, SpanDataBody> spans;
 
-    public TraceDataBody() {
-        this.spans =  new HashMap<>();
-    }
+  @JSONField(name = "processes")
+  public JSONObject processes;
 
-    public void addSpan(SpanDataBody span){
-        // TODO: Add the child spans to the end of the parent spans.
-        this.spans.put(span.spanID,span);
-    }
+  public TraceDataBody() {
+    this.spans = new HashMap<>();
+  }
+
+  public void addSpan(SpanDataBody span) {
+    // TODO: Add the child spans to the end of the parent spans.
+    this.spans.put(span.spanID, span);
+  }
 }

@@ -7,24 +7,24 @@ import lombok.Data;
 @Data
 public class IFLogDataReceivePayload {
 
-    @JSONField(name = "userName")
-    private String userName;
+  @JSONField(name = "userName")
+  private String userName;
 
-    @JSONField(name = "projectName")
-    private String projectName;
+  @JSONField(name = "projectName")
+  private String projectName;
 
-    @JSONField(name = "licenseKey")
-    private String licenseKey;
+  @JSONField(name = "licenseKey")
+  private String licenseKey;
 
-    @JSONField(name = "metricData")
-    private List<IFLogDataPayload> logDataList;
+  @JSONField(name = "metricData")
+  private List<IFLogDataPayload> logDataList;
 
-    @JSONField(name = "agentType")
-    private String insightAgentType;
+  @JSONField(name = "agentType")
+  private String insightAgentType;
 
-    @JSONField(name = "minTimestamp")
-    private Long minTimestamp;
+  @JSONField(name = "minTimestamp")
+  private Long minTimestamp;
 
-    @JSONField(name = "maxTimestamp")
-    private Long maxTimestamp;
+  @JSONField(name = "maxTimestamp")
+  private Long maxTimestamp;
 }
