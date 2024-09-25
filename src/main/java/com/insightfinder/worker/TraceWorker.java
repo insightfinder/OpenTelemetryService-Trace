@@ -30,16 +30,16 @@ public class TraceWorker implements Runnable {
         continue;
       }
       log.info("Prepare to send trace '{}' to project '{}' for user '{}'.",
-          traceInfo.traceId, traceInfo.ifProject, traceInfo.ifUser);
+          traceInfo.getTraceId(), traceInfo.getIfProject(), traceInfo.getIfUser());
 
       // Create Project IfNotExist and save the result to cache.
-      if (!insightFinderService.isProjectCreated(traceInfo.ifProject, traceInfo.ifProject,
-          traceInfo.ifUser, traceInfo.ifLicenseKey)) {
+      if (!insightFinderService.isProjectCreated(traceInfo.getIfProject(), traceInfo.getIfProject(),
+          traceInfo.getIfUser(), traceInfo.getIfLicenseKey())) {
         continue;
       }
 
       // Get Trace data from Jaeger
-      var rawJaegerData = jaegerService.getTraceData(traceInfo.traceId);
+      var rawJaegerData = jaegerService.getTraceData(traceInfo.getTraceId());
       if (rawJaegerData == null) {
         continue;
       }
@@ -48,7 +48,7 @@ public class TraceWorker implements Runnable {
       if (traceDataBody != null) {
         insightFinderService.sendTraceData(traceDataBody, traceInfo);
         log.info("Sent trace '{}' to project '{}' for user '{}'.",
-            traceInfo.traceId, traceInfo.ifProject, traceInfo.ifUser);
+            traceInfo.getTraceId(), traceInfo.getIfProject(), traceInfo.getIfUser());
       }
     }
   }

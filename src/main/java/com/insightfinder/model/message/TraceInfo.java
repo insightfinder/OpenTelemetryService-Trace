@@ -5,16 +5,23 @@ import com.insightfinder.config.Config;
 import java.util.Objects;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
+@Data
 public class TraceInfo implements Delayed {
 
   private static final long delay = Config.getInstance().getTraceDelayInMillis();
+  @Getter(AccessLevel.NONE)
+  @Setter(AccessLevel.NONE)
   private final long startTime;
-  public String traceId;
-  public String ifUser;
-  public String ifProject;
-  public String ifLicenseKey;
+  private String traceId;
+  private String ifUser;
+  private String ifProject;
+  private String ifLicenseKey;
 
 
   public TraceInfo(String traceId, String ifUser, String ifProject, String ifLicenseKey) {
@@ -25,7 +32,6 @@ public class TraceInfo implements Delayed {
 
     // Each message will be delayed for 1min to get received by the consumers.
     this.startTime = System.currentTimeMillis() + delay;
-
   }
 
   @Override

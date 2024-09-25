@@ -157,16 +157,16 @@ public class InsightFinderService {
     var iFPayload = new IFLogTraceDataReceivePayload();
 
     iFLogTraceData.setData(traceDataBody);
-    iFLogTraceData.setTimeStamp(traceDataBody.startTime);
-    var instanceName = traceDataBody.getServiceName();
-    iFLogTraceData.setTag(instanceName);
+    iFLogTraceData.setTimeStamp(traceDataBody.getStartTime());
+    var instanceName = traceDataBody.getInstanceName();
+    iFLogTraceData.setInstanceName(instanceName);
     if (instanceName != null && !instanceName.isEmpty()) {
       iFLogTraceData.setComponentName(instanceName);
     }
     iFPayload.setLogTraceDataList(new ArrayList<>(List.of(iFLogTraceData)));
-    iFPayload.setUserName(traceInfo.ifUser);
-    iFPayload.setLicenseKey(traceInfo.ifLicenseKey);
-    iFPayload.setProjectName(traceInfo.ifProject);
+    iFPayload.setUserName(traceInfo.getIfUser());
+    iFPayload.setLicenseKey(traceInfo.getIfLicenseKey());
+    iFPayload.setProjectName(traceInfo.getIfProject());
     iFPayload.setInsightAgentType("LogTrace");
 
     log.info(JSON.toJSONString(iFPayload));

@@ -9,8 +9,8 @@ public class IFLogTraceDataPayload {
   @JSONField(name = "timestamp")
   private long timeStamp;
 
-  @JSONField(name = "tag")
-  private String tag;
+  @JSONField(name = "instanceName")
+  private String instanceName;
 
   @JSONField(name = "data")
   private Object data;

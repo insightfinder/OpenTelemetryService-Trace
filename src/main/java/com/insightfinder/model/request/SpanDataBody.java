@@ -1,35 +1,40 @@
 package com.insightfinder.model.request;
 
 import com.alibaba.fastjson2.annotation.JSONField;
+import java.util.HashMap;
 import java.util.Map;
+import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 
 @Data
+@Builder
 public class SpanDataBody {
 
   @JSONField(name = "traceID")
-  public String traceID;
+  private final String traceID;
 
   @JSONField(name = "spanID")
-  public String spanID;
+  private final String spanID;
 
   @JSONField(name = "operationName")
-  public String operationName;
+  private final String operationName;
 
   @JSONField(name = "startTime")
-  public long startTime;
+  private final long startTime;
 
   @JSONField(name = "duration")
-  public long duration;
+  private final long duration;
 
   @JSONField(name = "attributes")
-  public Map<String, Object> attributes;
+  private final Map<String, Object> attributes;
 
   @JSONField(name = "parentSpanId")
-  public String parentSpanId;
+  private final String parentSpanId;
 
   @JSONField(name = "childSpans")
-  public Map<String, SpanDataBody> childSpans;
+  @Singular(value = "childSpan")
+  private final Map<String, SpanDataBody> childSpans = new HashMap<>();
 }
 
 
