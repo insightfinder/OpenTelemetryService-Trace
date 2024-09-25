@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class TraceInfo implements Delayed {
 
-  private static final long delay = Config.getInstance().getDelay();
+  private static final long delay = Config.getInstance().getTraceDelayInMillis();
   private final long startTime;
   public String traceId;
   public String ifUser;

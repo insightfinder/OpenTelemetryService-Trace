@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class AppConfig {
 
   private int traceWorkerNum;
-  private long delay;
+  private long traceDelayInMillis;
   private TLS tls;
 
   @Data

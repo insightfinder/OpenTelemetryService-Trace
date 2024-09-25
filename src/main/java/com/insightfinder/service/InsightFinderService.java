@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.FormBody;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -31,7 +32,7 @@ import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+@Slf4j
 public class InsightFinderService {
 
   private static final ConcurrentHashMap<String, Boolean> projectCache = new ConcurrentHashMap<>();
@@ -168,6 +169,7 @@ public class InsightFinderService {
     iFPayload.setProjectName(traceInfo.ifProject);
     iFPayload.setInsightAgentType("LogStreaming");
 
+    log.info(JSON.toJSONString(iFPayload));
     RequestBody body = RequestBody.create(JSON.toJSONBytes(iFPayload),
         MediaType.get("application/json"));
     Request request = new Request.Builder()

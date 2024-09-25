@@ -60,8 +60,8 @@ public class Config {
     return getAppConfig().getTraceWorkerNum();
   }
 
-  public long getDelay() {
-    return getAppConfig().getDelay();
+  public long getTraceDelayInMillis() {
+    return getAppConfig().getTraceDelayInMillis();
   }
 
   public int getGrpcPort() {
