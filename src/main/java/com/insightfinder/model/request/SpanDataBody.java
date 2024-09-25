@@ -1,7 +1,9 @@
 package com.insightfinder.model.request;
 import com.alibaba.fastjson2.annotation.JSONField;
 import java.util.Map;
+import lombok.Data;
 
+@Data
 public class SpanDataBody {
 
     @JSONField(name = "traceID")
@@ -27,7 +29,6 @@ public class SpanDataBody {
 
     @JSONField(name = "childSpans")
     public Map<String, SpanDataBody> childSpans;
-
 }
 
 

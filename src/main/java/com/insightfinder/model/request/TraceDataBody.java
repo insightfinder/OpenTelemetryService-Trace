@@ -2,10 +2,11 @@ package com.insightfinder.model.request;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.annotation.JSONField;
-
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Data;
 
+@Data
 public class TraceDataBody {
     @JSONField(name = "traceID")
     public String traceID;
