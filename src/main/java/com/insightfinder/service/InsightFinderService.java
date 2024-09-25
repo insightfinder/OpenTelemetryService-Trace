@@ -12,8 +12,10 @@ import static com.insightfinder.config.WebClientConstant.HTTP_REQUEST_PARAM_USER
 
 import com.alibaba.fastjson2.JSON;
 import com.insightfinder.config.Config;
+import com.insightfinder.model.message.TraceInfo;
 import com.insightfinder.model.request.IFLogDataPayload;
 import com.insightfinder.model.request.IFLogDataReceivePayload;
+import com.insightfinder.model.request.TraceDataBody;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +34,7 @@ import org.slf4j.LoggerFactory;
 
 public class InsightFinderService {
 
-  public static final ConcurrentHashMap<String, Boolean> projectCache = new ConcurrentHashMap<>();
+  private static final ConcurrentHashMap<String, Boolean> projectCache = new ConcurrentHashMap<>();
   private static final Config config = Config.getInstance();
   private static final String IF_AGENT_TYPE_CUSTOM = "Custom";
   private static final String IF_AGENT_TYPE_TRACE = "Trace";
@@ -149,21 +151,21 @@ public class InsightFinderService {
     }
   }
 
-  public void sendData(Object data, String userName, String licenseKey, String projectName,
-      String instanceName, long timestamp, String componentName) {
+  public void sendData(TraceDataBody traceDataBody, TraceInfo traceInfo) {
     var iFLogData = new IFLogDataPayload();
     var iFPayload = new IFLogDataReceivePayload();
 
-    iFLogData.setData(data);
-    iFLogData.setTimeStamp(timestamp);
+    iFLogData.setData(traceDataBody);
+    iFLogData.setTimeStamp(traceDataBody.startTime);
+    var instanceName = traceDataBody.getServiceName();
     iFLogData.setTag(instanceName);
-    if (componentName != null && !componentName.isEmpty()) {
-      iFLogData.setComponentName(componentName);
+    if (instanceName != null && !instanceName.isEmpty()) {
+      iFLogData.setComponentName(instanceName);
     }
     iFPayload.setLogDataList(new ArrayList<>(List.of(iFLogData)));
-    iFPayload.setUserName(userName);
-    iFPayload.setLicenseKey(licenseKey);
-    iFPayload.setProjectName(projectName);
+    iFPayload.setUserName(traceInfo.ifUser);
+    iFPayload.setLicenseKey(traceInfo.ifLicenseKey);
+    iFPayload.setProjectName(traceInfo.ifProject);
     iFPayload.setInsightAgentType("LogStreaming");
 
     RequestBody body = RequestBody.create(JSON.toJSONBytes(iFPayload),

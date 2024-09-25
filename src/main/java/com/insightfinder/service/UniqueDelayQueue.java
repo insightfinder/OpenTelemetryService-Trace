@@ -1,9 +1,11 @@
 package com.insightfinder.service;
 
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.Delayed;
 
-public class UniqueDelayQueueService<E extends Delayed> {
+public class UniqueDelayQueue<E extends Delayed> {
     private final DelayQueue<E> delayQueue = new DelayQueue<>();
     private final Set<E> messageSet = ConcurrentHashMap.newKeySet();
 

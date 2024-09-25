@@ -9,15 +9,14 @@ import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceResponse;
 import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc;
 import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Slf4j
 public class JaegerService {
 
-  private static final Logger LOG = LoggerFactory.getLogger(JaegerService.class);
   private static JaegerService instance;
   private final TraceServiceGrpc.TraceServiceBlockingStub traceServiceStub;
   private final OkHttpClient httpClient;
@@ -46,15 +45,14 @@ public class JaegerService {
   }
 
   public void saveTraceData(ExportTraceServiceRequest request) {
-
     String traceID = ParseUtil.parseHexadecimalBytes(
         request.getResourceSpans(0).getScopeSpans(0).getSpans(0).getTraceId());
 
     try {
       ExportTraceServiceResponse response = traceServiceStub.export(request);
-      LOG.info("Successfully save spans for trace {} to Jaeger", traceID);
+      log.info("Successfully save spans for trace {} to Jaeger", traceID);
     } catch (Exception e) {
-      LOG.error("Error sending trace data to Jaeger", e);
+      log.error("Error sending trace data to Jaeger", e);
     }
   }
 
@@ -66,13 +64,17 @@ public class JaegerService {
 
     try (Response response = httpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
-        LOG.error("Unexpected code {}", response);
+        log.error("Unexpected code {}", response);
+        return null;
+      }
+      if (response.body() == null) {
+        log.warn("Received a null trace data from Jaeger");
         return null;
       }
       String responseBody = response.body().string();
       return JSONObject.parseObject(responseBody);
     } catch (IOException e) {
-      LOG.error("Error querying trace data from Jaeger", e);
+      log.error("Error querying trace data from Jaeger", e);
       return null;
     }
   }

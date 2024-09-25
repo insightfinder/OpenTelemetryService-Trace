@@ -1,13 +1,12 @@
 package com.insightfinder.model.message;
 
 import com.google.common.primitives.Ints;
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Objects;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
+import org.jetbrains.annotations.NotNull;
 
-public class Message implements Delayed {
+public class TraceInfo implements Delayed {
     public String traceId;
     public String ifUser;
     public String ifProject;
@@ -16,7 +15,7 @@ public class Message implements Delayed {
     private final long startTime;
 
 
-    public Message(String traceId, String ifUser, String ifProject, String ifLicenseKey) {
+    public TraceInfo(String traceId, String ifUser, String ifProject, String ifLicenseKey) {
         this.traceId = traceId;
         this.ifUser = ifUser;
         this.ifProject = ifProject;
@@ -36,15 +35,17 @@ public class Message implements Delayed {
     @Override
     public int compareTo(@NotNull Delayed msg) {
         return Ints.saturatedCast(
-                this.startTime - ((Message) msg).startTime);
+            this.startTime - ((TraceInfo) msg).startTime);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Message message = (Message) o;
-        return Objects.equals(traceId, message.traceId) && Objects.equals(ifUser, message.ifUser) && Objects.equals(ifProject, message.ifProject) && Objects.equals(ifLicenseKey, message.ifLicenseKey);
+        TraceInfo traceInfo = (TraceInfo) o;
+        return Objects.equals(traceId, traceInfo.traceId) && Objects.equals(ifUser,
+            traceInfo.ifUser) && Objects.equals(ifProject, traceInfo.ifProject) && Objects.equals(
+            ifLicenseKey, traceInfo.ifLicenseKey);
     }
 
     @Override
