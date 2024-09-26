@@ -19,8 +19,13 @@ public class SpanDataBody {
     @JSONField(name = "duration")
     public long duration;
 
+    // TODO: total_tokens
+
+
     @JSONField(name = "attributes")
     public Map<String, Object> attributes;
+
+    // TODO: prompt_response -> The tag in the attrList
 
     @JSONField(name = "parentSpanId")
     public String parentSpanId;

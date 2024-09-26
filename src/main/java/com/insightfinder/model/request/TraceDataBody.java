@@ -28,6 +28,8 @@ public class TraceDataBody {
     @JSONField(name = "processes")
     public JSONObject processes;
 
+    // TODO: total_tokens
+
     public TraceDataBody() {
         this.spans =  new HashMap<>();
     }
