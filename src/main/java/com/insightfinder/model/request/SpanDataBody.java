@@ -3,9 +3,9 @@ package com.insightfinder.model.request;
 import com.alibaba.fastjson2.annotation.JSONField;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Singular;
 
 @Data
 @Builder
@@ -32,9 +32,26 @@ public class SpanDataBody {
   @JSONField(name = "parentSpanId")
   private final String parentSpanId;
 
+  @JSONField(name = "error")
+  private final boolean error;
+
   @JSONField(name = "childSpans")
-  @Singular(value = "childSpan")
   private final Map<String, SpanDataBody> childSpans = new HashMap<>();
+
+  public void addChildSpans(Set<SpanDataBody> childSpans) {
+    childSpans.forEach(childSpan -> {
+      var childSpanId = childSpan.getSpanID();
+      this.childSpans.put(childSpanId, childSpan);
+    });
+  }
+
+  public Integer getTotalTokens() {
+    try {
+      return (Integer) attributes.get("total_tokens");
+    } catch (Exception e) {
+      return null;
+    }
+  }
 }
 
 

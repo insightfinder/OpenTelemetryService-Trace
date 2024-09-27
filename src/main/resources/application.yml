@@ -25,3 +25,14 @@ app:
     # Path to the private key file.
     privateKeyFile: ""
 
+data:
+  attrMapping:
+    prompt_response: # required field
+      filedPath: "tags.recommendations prompt"
+      rawDataType: STRING
+    total_tokens: # required field
+      filedPath: "tags.prompt_token_usage"
+      rawDataType: STRING
+    error: # required field
+      filedPath: "tags.error_messages"
+      rawDataType: STRING

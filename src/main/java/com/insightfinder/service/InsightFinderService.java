@@ -29,8 +29,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Slf4j
 public class InsightFinderService {
@@ -46,7 +44,6 @@ public class InsightFinderService {
   private static final String RESPONSE_SUCCESS = "success";
   private static final String DATA_TYPE_LOG = "Log";
   private static InsightFinderService instance;
-  private final Logger LOG = LoggerFactory.getLogger(InsightFinderService.class);
   private final OkHttpClient httpClient = new OkHttpClient();
 
   private InsightFinderService() {
@@ -101,11 +98,11 @@ public class InsightFinderService {
           projectExist = false;
         }
       } else {
-        LOG.error("Request failed with code: {}", response.code());
+        log.error("Request failed with code: {}", response.code());
         return false;
       }
     } catch (IOException e) {
-      LOG.error(e.getMessage());
+      log.error(e.getMessage());
       return false;
     }
 
@@ -131,20 +128,20 @@ public class InsightFinderService {
         if (response.isSuccessful()) {
           var isProjectCreated = responseBodyJson.getBoolean(RESPONSE_SUCCESS);
           if (isProjectCreated) {
-            LOG.info("Project '{}' created for user '{}'", projectName, user);
+            log.info("Project '{}' created for user '{}'", projectName, user);
             return true;
           } else {
-            LOG.error("Failed to create project '{}' for user '{}': {}", projectExist, user,
+            log.error("Failed to create project '{}' for user '{}': {}", projectExist, user,
                 responseBodyJson.getString("message"));
             return false;
           }
         } else {
-          LOG.error("Failed to create project '{}' for user '{}': {}", projectExist, user,
+          log.error("Failed to create project '{}' for user '{}': {}", projectExist, user,
               response.code());
           return false;
         }
       } catch (IOException e) {
-        LOG.error(e.getMessage());
+        log.error(e.getMessage());
         return false;
       }
     } else {
@@ -157,7 +154,7 @@ public class InsightFinderService {
     var iFPayload = new IFLogTraceDataReceivePayload();
 
     iFLogTraceData.setData(traceDataBody);
-    iFLogTraceData.setTimeStamp(traceDataBody.getStartTime());
+    iFLogTraceData.setTimeStamp(String.valueOf(traceDataBody.getStartTime()));
     var instanceName = traceDataBody.getInstanceName();
     iFLogTraceData.setInstanceName(instanceName);
     if (instanceName != null && !instanceName.isEmpty()) {
@@ -169,7 +166,7 @@ public class InsightFinderService {
     iFPayload.setProjectName(traceInfo.getIfProject());
     iFPayload.setInsightAgentType("LogTrace");
 
-    log.info(JSON.toJSONString(iFPayload));
+//    log.info(JSON.toJSONString(iFPayload));
     RequestBody body = RequestBody.create(JSON.toJSONBytes(iFPayload),
         MediaType.get("application/json"));
     Request request = new Request.Builder()
@@ -181,10 +178,13 @@ public class InsightFinderService {
 
     try (Response response = httpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
-        LOG.error("Error sending log data with response: {}", response.message());
+        log.error("Error sending log data with response: {}", response.message());
+      } else {
+        log.info("Sent trace '{}' to project '{}' for user '{}'.",
+            traceInfo.getTraceId(), traceInfo.getIfProject(), traceInfo.getIfUser());
       }
     } catch (IOException e) {
-      LOG.error("Error sending log data with exception: {}", e.getMessage());
+      log.error("Error sending log data with exception: {}", e.getMessage());
     }
   }
 }

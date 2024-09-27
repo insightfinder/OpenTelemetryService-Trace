@@ -7,7 +7,7 @@ import lombok.Data;
 public class IFLogTraceDataPayload {
 
   @JSONField(name = "timestamp")
-  private long timeStamp;
+  private String timeStamp;
 
   @JSONField(name = "instanceName")
   private String instanceName;

@@ -91,6 +91,29 @@
       <version>1.65.1</version>
     </dependency>
 
+    <dependency>
+      <artifactId>junit-jupiter-api</artifactId>
+      <groupId>org.junit.jupiter</groupId>
+      <scope>test</scope>
+      <version>5.9.1</version>
+    </dependency>
+    <dependency>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <groupId>org.junit.jupiter</groupId>
+      <scope>test</scope>
+      <version>5.9.1</version>
+    </dependency>
+    <dependency>
+      <artifactId>mockito-inline</artifactId>
+      <groupId>org.mockito</groupId>
+      <version>4.5.1</version>
+    </dependency>
+    <dependency>
+      <artifactId>assertj-core</artifactId>
+      <groupId>org.assertj</groupId>
+      <scope>test</scope>
+      <version>3.24.2</version>
+    </dependency>
   </dependencies>
 
   <build>

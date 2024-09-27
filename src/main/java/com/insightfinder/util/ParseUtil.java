@@ -2,6 +2,7 @@ package com.insightfinder.util;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.google.protobuf.ByteString;
+import com.insightfinder.config.model.ValueMapping;
 import io.grpc.Metadata;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,4 +41,18 @@ public class ParseUtil {
     return result;
   }
 
+  public static Object getValueInAttrByPath(ValueMapping valueMapping,
+      Map<String, Object> attrMap) {
+    var fieldPath = valueMapping.getFiledPath();
+    var attrPrefix = "tags.";
+    if (fieldPath.startsWith(attrPrefix)) {
+      var attrName = fieldPath.substring(attrPrefix.length());
+      return attrMap.get(attrName);
+    }
+    return null;
+  }
+
+  public static long fromMicroSecondToMillis(long microSecond) {
+    return microSecond / 1000L;
+  }
 }

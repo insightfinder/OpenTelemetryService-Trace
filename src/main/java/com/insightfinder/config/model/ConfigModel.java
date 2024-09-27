@@ -13,4 +13,5 @@ public class ConfigModel {
   private InsightFinderConfig insightFinder;
   private JaegerConfig jaeger;
   private AppConfig app;
+  private DataConfig data;
 }

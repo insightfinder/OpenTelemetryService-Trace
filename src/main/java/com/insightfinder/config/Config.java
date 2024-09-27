@@ -3,11 +3,14 @@ package com.insightfinder.config;
 import com.insightfinder.config.model.AppConfig;
 import com.insightfinder.config.model.AppConfig.TLS;
 import com.insightfinder.config.model.ConfigModel;
+import com.insightfinder.config.model.DataConfig;
 import com.insightfinder.config.model.GrpcConfig;
 import com.insightfinder.config.model.InsightFinderConfig;
 import com.insightfinder.config.model.JaegerConfig;
+import com.insightfinder.config.model.ValueMapping;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.yaml.snakeyaml.Yaml;
 
@@ -38,6 +41,14 @@ public class Config {
     try (InputStream input = Config.class.getClassLoader().getResourceAsStream(CONFIG_FILE_PATH)) {
       configModel = new Yaml().loadAs(input, ConfigModel.class);
     }
+  }
+
+  public DataConfig getData() {
+    return configModel.getData();
+  }
+
+  public Map<String, ValueMapping> getAttrMapping() {
+    return getData().getAttrMapping();
   }
 
   private AppConfig getAppConfig() {
