@@ -57,7 +57,7 @@ public class JaegerService {
   }
 
   public JSONObject getTraceData(String traceID) {
-    String queryUrl = this.queryUrl + "1e66c5f8429afc08fa1bcfd57250d23b";
+    String queryUrl = this.queryUrl + traceID;
     Request request = new Request.Builder()
         .url(queryUrl)
         .build();
