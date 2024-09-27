@@ -12,9 +12,13 @@ import org.junit.jupiter.api.Test;
 public class TraceDataBodyTest {
 
   private SpanDataBody getExampleSpan(String id, String parentId, String prompt) {
+    Map<String, Object> attributes = new HashMap<>();
+    attributes.put("prompt_response", prompt);
+    attributes.put("total_tokens", prompt.length());
     return SpanDataBody.builder()
         .spanID(id)
         .parentSpanId(parentId)
+        .attributes(attributes)
         .build();
   }
 
