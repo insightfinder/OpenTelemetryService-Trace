@@ -28,15 +28,15 @@ app:
 data:
   attrMapping: # expect the field is in tags
     prompt_response:
-      filedPaths:
+      fieldPaths:
         - "tags.recommendations prompt"
     prompt_token:
-      filedPaths:
+      fieldPaths:
         - "tags.prompt_token_usage"
         - "tags.token_usage"
     response_token:
-      filedPaths:
+      fieldPaths:
         - "tags.output_token_usage"
     error:
-      filedPaths:
+      fieldPaths:
         - "tags.error_messages"
