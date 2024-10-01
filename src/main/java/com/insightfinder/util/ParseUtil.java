@@ -43,11 +43,19 @@ public class ParseUtil {
 
   public static Object getValueInAttrByPath(ValueMapping valueMapping,
       Map<String, Object> attrMap) {
-    var fieldPath = valueMapping.getFiledPath();
+    var fieldPaths = valueMapping.getFiledPaths();
+    if (fieldPaths == null || fieldPaths.isEmpty()) {
+      return null;
+    }
     var attrPrefix = "tags.";
-    if (fieldPath.startsWith(attrPrefix)) {
-      var attrName = fieldPath.substring(attrPrefix.length());
-      return attrMap.get(attrName);
+    for (var fieldPath : fieldPaths) {
+      var trimmedFieldPath = fieldPath.trim();
+      if (trimmedFieldPath.startsWith(attrPrefix)) {
+        var attrName = fieldPath.substring(attrPrefix.length());
+        return attrMap.get(attrName);
+      } else {
+        return attrMap.get(trimmedFieldPath);
+      }
     }
     return null;
   }

@@ -26,13 +26,17 @@ app:
     privateKeyFile: ""
 
 data:
-  attrMapping:
-    prompt_response: # required field
-      filedPath: "tags.recommendations prompt"
-      rawDataType: STRING
-    total_tokens: # required field
-      filedPath: "tags.prompt_token_usage"
-      rawDataType: STRING
-    error: # required field
-      filedPath: "tags.error_messages"
-      rawDataType: STRING
+  attrMapping: # expect the field is in tags
+    prompt_response:
+      filedPaths:
+        - "tags.recommendations prompt"
+    prompt_token:
+      filedPaths:
+        - "tags.prompt_token_usage"
+        - "tags.token_usage"
+    response_token:
+      filedPaths:
+        - "tags.output_token_usage"
+    error:
+      filedPaths:
+        - "tags.error_messages"

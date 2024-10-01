@@ -7,7 +7,6 @@ import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
 import com.insightfinder.config.Config;
 import com.insightfinder.config.model.ValueMapping;
-import com.insightfinder.model.ValueType;
 import com.insightfinder.model.message.TraceInfo;
 import com.insightfinder.model.request.SpanDataBody;
 import com.insightfinder.model.request.SpanDataBody.SpanDataBodyBuilder;
@@ -132,19 +131,37 @@ public class TraceDataMapper {
   }
 
   private void extractTotalTokens(Map<String, Object> attributes) {
-    var totalTokenValueMapping = valueMappings.get("total_tokens");
-    if (totalTokenValueMapping == null) {
-      return;
-    }
-    var totalToken = ParseUtil.getValueInAttrByPath(totalTokenValueMapping, attributes);
-    if (totalToken != null) {
-      if (totalTokenValueMapping.getRawDataType().equals(ValueType.STRING)) {
-        var totalTokens = Integer.parseInt((String) totalToken);
-        attributes.put("total_tokens", totalTokens);
-      } else if (totalTokenValueMapping.getRawDataType().equals(ValueType.INT)) {
-        var totalTokens = (Integer) totalToken;
-        attributes.put("total_tokens", totalTokens);
+    var promptTokenMapping = valueMappings.get("prompt_token");
+    var responseTokenMapping = valueMappings.get("response_token");
+    Integer totalTokens = null;
+    if (promptTokenMapping != null) {
+      var promptToken = ParseUtil.getValueInAttrByPath(promptTokenMapping, attributes);
+      if (promptToken != null) {
+        totalTokens = 0;
+        if (promptToken instanceof String) {
+          var promptTokenNum = Integer.parseInt((String) promptToken);
+          totalTokens += promptTokenNum;
+        } else if (promptToken instanceof Integer) {
+          totalTokens += (Integer) promptToken;
+        }
       }
+    }
+    if (responseTokenMapping != null) {
+      var responseToken = ParseUtil.getValueInAttrByPath(responseTokenMapping, attributes);
+      if (responseToken != null) {
+        if (totalTokens == null) {
+          totalTokens = 0;
+        }
+        if (responseToken instanceof String) {
+          var responseTokenNum = Integer.parseInt((String) responseToken);
+          totalTokens += responseTokenNum;
+        } else if (responseToken instanceof Integer) {
+          totalTokens += (Integer) responseToken;
+        }
+      }
+    }
+    if (totalTokens != null) {
+      attributes.put("total_tokens", totalTokens);
     }
   }
 
@@ -154,22 +171,23 @@ public class TraceDataMapper {
     if (errorFieldValeMapping == null) {
       return;
     }
-    var valueType = errorFieldValeMapping.getRawDataType();
-    var error = ParseUtil.getValueInAttrByPath(errorFieldValeMapping,
-        attributes);
+    var error = ParseUtil.getValueInAttrByPath(errorFieldValeMapping, attributes);
     if (error != null) {
-      if (valueType.equals(ValueType.STRING)) {
-        var errorMessages = (String) error;
-        try {
-          var errorMessageList = JSON.parseArray(errorMessages, String.class);
-          var hasErrorMessage = errorMessageList != null && !errorMessageList.isEmpty();
-          spanDataBodyBuilder.error(hasErrorMessage);
-        } catch (JSONException e) {
-          var hasErrorMessage = StringUtils.isNullOrEmpty(errorMessages);
-          spanDataBodyBuilder.error(hasErrorMessage);
+      try {
+        if (error instanceof String errorMessages) {
+          try {
+            var errorMessageList = JSON.parseArray(errorMessages, String.class);
+            var hasErrorMessage = errorMessageList != null && !errorMessageList.isEmpty();
+            spanDataBodyBuilder.error(hasErrorMessage);
+          } catch (JSONException e) {
+            var hasErrorMessage = StringUtils.isNullOrEmpty(errorMessages);
+            spanDataBodyBuilder.error(hasErrorMessage);
+          }
+        } else if (error instanceof Boolean) {
+          spanDataBodyBuilder.error((Boolean) error);
         }
-      } else if (valueType.equals(ValueType.BOOLEAN)) {
-        spanDataBodyBuilder.error((Boolean) error);
+      } catch (Exception e) {
+        log.error("Error parsing error flag from '{}': {}", error, e.getMessage());
       }
     }
   }

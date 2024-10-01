@@ -17,7 +17,6 @@ import com.insightfinder.model.request.IFLogTraceDataPayload;
 import com.insightfinder.model.request.IFLogTraceDataReceivePayload;
 import com.insightfinder.model.request.TraceDataBody;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -160,7 +159,7 @@ public class InsightFinderService {
     if (instanceName != null && !instanceName.isEmpty()) {
       iFLogTraceData.setComponentName(instanceName);
     }
-    iFPayload.setLogTraceDataList(new ArrayList<>(List.of(iFLogTraceData)));
+    iFPayload.setLogTraceDataList(JSON.toJSONString(List.of(iFLogTraceData)));
     iFPayload.setUserName(traceInfo.getIfUser());
     iFPayload.setLicenseKey(traceInfo.getIfLicenseKey());
     iFPayload.setProjectName(traceInfo.getIfProject());

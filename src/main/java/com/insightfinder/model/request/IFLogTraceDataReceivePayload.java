@@ -1,7 +1,6 @@
 package com.insightfinder.model.request;
 
 import com.alibaba.fastjson2.annotation.JSONField;
-import java.util.List;
 import lombok.Data;
 
 @Data
@@ -17,7 +16,7 @@ public class IFLogTraceDataReceivePayload {
   private String licenseKey;
 
   @JSONField(name = "logTraceData")
-  private List<IFLogTraceDataPayload> logTraceDataList;
+  private String logTraceDataList;
 
   @JSONField(name = "agentType")
   private String insightAgentType;

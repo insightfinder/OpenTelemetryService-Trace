@@ -1,6 +1,6 @@
 package com.insightfinder.config.model;
 
-import com.insightfinder.model.ValueType;
+import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -8,6 +8,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ValueMapping {
 
-  private String filedPath;
-  private ValueType rawDataType;
+  private List<String> filedPaths;
 }
