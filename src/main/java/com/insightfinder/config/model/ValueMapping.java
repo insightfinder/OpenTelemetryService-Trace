@@ -8,5 +8,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ValueMapping {
 
-  private List<String> filedPaths;
+  private List<String> fieldPaths;
 }
