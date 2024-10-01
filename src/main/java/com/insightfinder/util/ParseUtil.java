@@ -43,7 +43,7 @@ public class ParseUtil {
 
   public static Object getValueInAttrByPath(ValueMapping valueMapping,
       Map<String, Object> attrMap) {
-    var fieldPaths = valueMapping.getFiledPaths();
+    var fieldPaths = valueMapping.getFieldPaths();
     if (fieldPaths == null || fieldPaths.isEmpty()) {
       return null;
     }
