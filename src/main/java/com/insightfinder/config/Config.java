@@ -8,8 +8,8 @@ import com.insightfinder.config.model.GrpcConfig;
 import com.insightfinder.config.model.InsightFinderConfig;
 import com.insightfinder.config.model.JaegerConfig;
 import com.insightfinder.config.model.ValueMapping;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.yaml.snakeyaml.Yaml;
@@ -20,6 +20,7 @@ public class Config {
   private static final String CONFIG_FILE_PATH = "application.yml";
   private static Config instance;
   private ConfigModel configModel;
+  private static final String workDir = System.getProperty("user.dir");
 
   private Config() {
     try {
@@ -38,8 +39,9 @@ public class Config {
   }
 
   private void loadConfigs() throws IOException {
-    try (InputStream input = Config.class.getClassLoader().getResourceAsStream(CONFIG_FILE_PATH)) {
-      configModel = new Yaml().loadAs(input, ConfigModel.class);
+    try (FileInputStream fileInputStream = new FileInputStream(
+        (workDir + "/" + CONFIG_FILE_PATH))) {
+      configModel = new Yaml().loadAs(fileInputStream, ConfigModel.class);
     }
   }
 
