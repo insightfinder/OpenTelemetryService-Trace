@@ -27,7 +27,7 @@ public class TraceDataBody {
   @JSONField(name = "duration")
   private long duration;
 
-  @JSONField(name = "total_token")
+  @JSONField(name = "total_tokens")
   private int totalToken;
 
   @JSONField(name = "spans")
