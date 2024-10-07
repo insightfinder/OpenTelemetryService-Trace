@@ -1,38 +1,57 @@
 package com.insightfinder.model.request;
-import com.alibaba.fastjson2.annotation.JSONField;
-import java.util.Map;
 
+import com.alibaba.fastjson2.annotation.JSONField;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
 public class SpanDataBody {
 
-    @JSONField(name = "traceID")
-    public String traceID;
+  @JSONField(name = "traceID")
+  private final String traceID;
 
-    @JSONField(name = "spanID")
-    public String spanID;
+  @JSONField(name = "spanID")
+  private final String spanID;
 
-    @JSONField(name = "operationName")
-    public String operationName;
+  @JSONField(name = "operationName")
+  private final String operationName;
 
-    @JSONField(name = "startTime")
-    public long startTime;
+  @JSONField(name = "startTime")
+  private final long startTime;
 
-    @JSONField(name = "duration")
-    public long duration;
+  @JSONField(name = "duration")
+  private final long duration;
 
-    // TODO: total_tokens
+  @JSONField(name = "attributes")
+  private final Map<String, Object> attributes;
 
+  @JSONField(name = "parentSpanId")
+  private final String parentSpanId;
 
-    @JSONField(name = "attributes")
-    public Map<String, Object> attributes;
+  @JSONField(name = "error")
+  private final boolean error;
 
-    // TODO: prompt_response -> The tag in the attrList
+  @JSONField(name = "childSpans")
+  private final Map<String, SpanDataBody> childSpans = new HashMap<>();
 
-    @JSONField(name = "parentSpanId")
-    public String parentSpanId;
+  public void addChildSpans(Set<SpanDataBody> childSpans) {
+    childSpans.forEach(childSpan -> {
+      var childSpanId = childSpan.getSpanID();
+      this.childSpans.put(childSpanId, childSpan);
+    });
+  }
 
-    @JSONField(name = "childSpans")
-    public Map<String, SpanDataBody> childSpans;
-
+  public Integer getTotalTokens() {
+    try {
+      return (Integer) attributes.get("total_tokens");
+    } catch (Exception e) {
+      return null;
+    }
+  }
 }
 
 

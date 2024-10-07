@@ -1,0 +1,42 @@
+grpc:
+  port: 4317
+  maxInboundMessageSizeInKB: 16384
+
+insightFinder:
+  username: username
+  serverUrl: https://stg.insightfinder.com
+  serverUri: /api/v1/customprojectrawdata
+  checkAndCreateUri: /api/v1/check-and-add-custom-project
+  licenseKey: licenseKey
+
+jaeger:
+  serverName: 18.212.200.99
+  tlsEnabled: false
+  grpcPort: 4317
+  uiPort: 16686
+
+app:
+  traceWorkerNum: 5
+  traceDelayInMillis: 60000
+  tls:
+    enabled: false
+    # Path to full-chain certificate file (PEM)
+    certificateFile: ""
+    # Path to the private key file.
+    privateKeyFile: ""
+
+data:
+  attrMapping: # expect the field is in tags
+    prompt_response:
+      fieldPaths:
+        - "tags.recommendations prompt"
+    prompt_token:
+      fieldPaths:
+        - "tags.prompt_token_usage"
+        - "tags.token_usage"
+    response_token:
+      fieldPaths:
+        - "tags.output_token_usage"
+    error:
+      fieldPaths:
+        - "tags.error_messages"

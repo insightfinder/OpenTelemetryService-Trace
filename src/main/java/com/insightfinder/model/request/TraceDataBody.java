@@ -2,40 +2,77 @@ package com.insightfinder.model.request;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.annotation.JSONField;
-
+import io.opentelemetry.api.internal.StringUtils;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import lombok.Data;
 
+@Data
 public class TraceDataBody {
-    @JSONField(name = "traceID")
-    public String traceID;
 
-    @JSONField(name = "serviceName")
-    public String serviceName;
+  @JSONField(name = "traceID")
+  private String traceID;
 
-    @JSONField(name = "startTime")
-    public long startTime;
+  @JSONField(name = "instanceName")
+  private String instanceName;
 
-    @JSONField(name = "endTime")
-    public long endTime;
+  @JSONField(name = "startTime")
+  private long startTime;
 
-    @JSONField(name = "duration")
-    public long duration;
+  @JSONField(name = "endTime")
+  private long endTime;
 
-    @JSONField(name = "spans")
-    public Map<String,SpanDataBody> spans;
+  @JSONField(name = "duration")
+  private long duration;
 
-    @JSONField(name = "processes")
-    public JSONObject processes;
+  @JSONField(name = "total_tokens")
+  private int totalToken;
 
-    // TODO: total_tokens
+  @JSONField(name = "spans")
+  private Map<String, SpanDataBody> spans = new HashMap<>(); // rootSpanId -> rootSpan
 
-    public TraceDataBody() {
-        this.spans =  new HashMap<>();
+  @JSONField(name = "processes")
+  private JSONObject processes;
+
+  private transient Map<String, Set<SpanDataBody>> childSpans = new HashMap<>(); // parentSpanId -> childSpans
+
+  public void addSpan(SpanDataBody span) {
+    var spanTotalTokens = span.getTotalTokens();
+    if (spanTotalTokens != null) {
+      totalToken += span.getTotalTokens();
     }
-
-    public void addSpan(SpanDataBody span){
-        // TODO: Add the child spans to the end of the parent spans.
-        this.spans.put(span.spanID,span);
+    var parentSpanId = span.getParentSpanId();
+    if (StringUtils.isNullOrEmpty(parentSpanId)) {
+      spans.put(span.getSpanID(), span);
+    } else {
+      var childSpans = this.childSpans.getOrDefault(parentSpanId, new HashSet<>());
+      childSpans.add(span);
+      this.childSpans.put(parentSpanId, childSpans);
     }
+  }
+
+  public void composeSpanRelations() {
+    for (SpanDataBody rootSpan : spans.values()) {
+      buildSpanRelation(rootSpan);
+    }
+  }
+
+  private void buildSpanRelation(SpanDataBody rootSpan) {
+    if (rootSpan == null || rootSpan.getSpanID() == null) {
+      return;
+    }
+    var childSpans = this.childSpans.get(rootSpan.getSpanID());
+    if (childSpans != null) {
+      rootSpan.addChildSpans(childSpans);
+      for (SpanDataBody childSpan : childSpans) {
+        buildSpanRelation(childSpan);
+      }
+    }
+  }
+
+  public boolean isEmpty() {
+    return spans.isEmpty();
+  }
 }
