@@ -3,6 +3,7 @@ package com.insightfinder.mapper;
 import static com.insightfinder.util.ParseUtil.fromMicroSecondToMillis;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
 import com.insightfinder.config.Config;
@@ -96,9 +97,29 @@ public class TraceDataMapper {
         .attributes(attributes);
 
     try {
-      extractErrorFlag(attributes, spanDataBodyBuilder);
+      var spanError = rawSpanData.get("error");
+      var attrError = attributes.get("error");
+      if (spanError != null || attrError != null) {
+        var error = spanError != null ? spanError : attrError;
+        if (error instanceof String errorStr) {
+          if (errorStr.equalsIgnoreCase("true")) {
+            spanDataBodyBuilder.error(true);
+          } else if (errorStr.equalsIgnoreCase("false")) {
+            spanDataBodyBuilder.error(false);
+          } else {
+            spanDataBodyBuilder.error(!errorStr.isEmpty());
+          }
+        } else if (error instanceof Boolean) {
+          spanDataBodyBuilder.error((Boolean) error);
+        } else {
+          log.info("unsupported span error type: {}", error.getClass().getName());
+          spanDataBodyBuilder.error(false);
+        }
+      } else {
+        extractErrorFlag(attributes, spanDataBodyBuilder);
+      }
     } catch (Exception e) {
-      log.error("Error parsing error messages: {}", e.getMessage());
+      log.error("Error parsing error messages: {}, span: {}", e.getMessage(), rawSpanData);
       spanDataBodyBuilder.error(false);
     }
 
@@ -169,26 +190,35 @@ public class TraceDataMapper {
       SpanDataBodyBuilder spanDataBodyBuilder) {
     var errorFieldValeMapping = valueMappings.get("error");
     if (errorFieldValeMapping == null) {
+      log.info("No error message path provided");
+      spanDataBodyBuilder.error(false);
       return;
     }
     var error = ParseUtil.getValueInAttrByPath(errorFieldValeMapping, attributes);
     if (error != null) {
-      try {
-        if (error instanceof String errorMessages) {
-          try {
-            var errorMessageList = JSON.parseArray(errorMessages, String.class);
-            var hasErrorMessage = errorMessageList != null && !errorMessageList.isEmpty();
-            spanDataBodyBuilder.error(hasErrorMessage);
-          } catch (JSONException e) {
-            var hasErrorMessage = StringUtils.isNullOrEmpty(errorMessages);
-            spanDataBodyBuilder.error(hasErrorMessage);
+      if (error instanceof String errorMessages) {
+        try {
+          var errorMessage = JSON.parse(errorMessages);
+          if (errorMessage instanceof JSONObject errorMessageObj) {
+            spanDataBodyBuilder.error(!errorMessageObj.isEmpty());
+          } else if (errorMessage instanceof JSONArray errorMessageList) {
+            spanDataBodyBuilder.error(!errorMessageList.isEmpty());
+          } else {
+            log.info("unsupported span attribute error type: {}", error);
+            spanDataBodyBuilder.error(false);
           }
-        } else if (error instanceof Boolean) {
-          spanDataBodyBuilder.error((Boolean) error);
+        } catch (JSONException e) {
+          var hasErrorMessage = StringUtils.isNullOrEmpty(errorMessages);
+          spanDataBodyBuilder.error(hasErrorMessage);
         }
-      } catch (Exception e) {
-        log.error("Error parsing error flag from '{}': {}", error, e.getMessage());
+      } else if (error instanceof Boolean) {
+        spanDataBodyBuilder.error((Boolean) error);
+      } else {
+        log.info("unsupported span attribute error type: {}", error.getClass().getName());
+        spanDataBodyBuilder.error(false);
       }
+    } else {
+      spanDataBodyBuilder.error(false);
     }
   }
 }
