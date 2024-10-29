@@ -82,7 +82,11 @@ public class Config {
   }
 
   public int getGrpcMaxInboundMessageSizeInKB() {
-    return getGrpcConfig().getMaxInboundMessageSizeInKB();
+    int maxInboundMessageSizeInKB = getGrpcConfig().getMaxInboundMessageSizeInKB();
+    if (maxInboundMessageSizeInKB == 0) {
+      maxInboundMessageSizeInKB = 16 * 1024;
+    }
+    return maxInboundMessageSizeInKB;
   }
 
   public String getIFServerUrl() {
