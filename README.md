@@ -66,7 +66,8 @@ data:
 This section configures the trace agent gRPC server settings.
 
 - `port`: The port on which the trace agent gRPC server will listen.
-- `maxInboundMessageSizeInKB`: The maximum size of inbound messages in kilobytes, default is 100.
+- `maxInboundMessageSizeInKB`: The maximum size of inbound messages in kilobytes, default is
+  16,384 (16 MB).
 
 ### `insightFinder`
 
