@@ -9,9 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class InsightFinderConfig {
 
-  private String username;
   private String serverUrl;
   private String serverUri;
   private String checkAndCreateUri;
-  private String licenseKey;
 }

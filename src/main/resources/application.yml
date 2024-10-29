@@ -3,11 +3,9 @@ grpc:
   maxInboundMessageSizeInKB: 16384
 
 insightFinder:
-  username: username
   serverUrl: https://stg.insightfinder.com
   serverUri: /api/v1/customprojectrawdata
   checkAndCreateUri: /api/v1/check-and-add-custom-project
-  licenseKey: licenseKey
 
 jaeger:
   serverName: 18.212.200.99
