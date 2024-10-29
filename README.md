@@ -101,7 +101,7 @@ This section contains trace-agent-specific settings.
 ### `data`
 
 This section configures data attribute mappings. All the field paths are expected to be in the
-`tags`.
+`tags`. If multiple paths are provided, the first one that has value will be used.
 
 - `attrMapping.prompt_response.fieldPaths`: JSON fields to extract prompt response.
 - `attrMapping.prompt_token.fieldPaths`: JSON fields to extract prompt token. The value should be
