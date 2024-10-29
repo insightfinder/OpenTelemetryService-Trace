@@ -64,12 +64,14 @@ service:
 - `receivers.otlp.protocols.http.endpoint`: The endpoint on which the OpenTelemetry Collector will
   listen for trace data.
 - `exporters` A list of exporters the collector can use.
-  - `otlp/insightfinder`: The exporter name. Exporter name should always start with `otlp/`.
-    - `endpoint`: The trace agent endpoint.
-    - `tls.insecure`: A boolean indicating whether to use insecure connection.
-    - `headers.ifuser`: The InsightFinder username.
-    - `headers.iflicenseKey`: The InsightFinder license key.
-    - `headers.ifproject`: The InsightFinder project name.
+    - `otlp/insightfinder`: The exporter name. Exporter name should always start with `otlp/`.
+        - `endpoint`: The trace agent endpoint.
+        - `tls.insecure`: A boolean indicating whether to use insecure connection.
+        - `headers.ifuser`: The InsightFinder username.
+        - `headers.iflicenseKey`: The InsightFinder license key.
+        - `headers.ifproject`: The InsightFinder project name.
+- `pipelines.traces.exporters`: Specifies the exporters to use for traces. The exporter names should
+  match the names in the `exporters` section.
 
 # Run Trace Agent
 
@@ -164,9 +166,9 @@ This section contains trace-agent-specific settings.
 - `traceDelayInMillis`: The time (in milliseconds) agent will wait to collect all spans of a trace
   before sending them to InsightFinder.
 - `tls`: Configuration for trace agent TLS settings.
-  - `enabled`: A boolean indicating whether TLS is enabled.
-  - `certificateFile`: Path to the full-chain certificate file (PEM).
-  - `privateKeyFile`: Path to the private key file.
+    - `enabled`: A boolean indicating whether TLS is enabled.
+    - `certificateFile`: Path to the full-chain certificate file (PEM).
+    - `privateKeyFile`: Path to the private key file.
 
 ### `data`
 
