@@ -83,7 +83,7 @@ This section configures the Jaeger server settings.
 
 - `serverName`: The server domain or IP address of the Jaeger server.
 - `tlsEnabled`: A boolean indicating whether TLS is enabled.
-- `grpcPort`: The gRPC port the Jaeger server listens on.
+- `grpcPort`: The gRPC port the Jaeger server listens.
 - `uiPort`: The UI port for Jaeger.
 
 ### `app`
