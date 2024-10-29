@@ -2,11 +2,81 @@
 
 OpenTelemetry OTLP service that accept Trace data and Send to InsightFinder.
 
-# Run Application
+# Prerequisites
+
+1. Java JRE 21 or higher
+2. OpenTelemetry Collector
+
+## Setup OpenTelemetry Collector
+
+### Installation
+
+InsightFinder requires a “OpenTelemetry Collector” to be set up to stream data.
+
+1. Download the OpenTelemetry release from GitHub release page.
+2. Extract the downloaded tarball:
+
+```bash
+tar -xvzf otelcol-<platform>-amd64.tar.gz
+```
+
+3. Run the collector with the configuration file:
+
+```bash
+./otelcol --config=config.yaml
+```
+
+### Configuration
+
+Here is the example of an OpenTelemetry collector that collects data and send to InsightFinder
+server:
+
+```yaml
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4418
+processors:
+  batch:
+exporters:
+  otlp/insightfinder:
+    endpoint: 127.0.0.1:4317
+    tls:
+      insecure: true
+    headers:
+      ifuser: "user"
+      iflicenseKey: "your-licence-key"
+      ifproject: "project-to-send-trace-data"
+service:
+  telemetry:
+    metrics:
+      address: 0.0.0.0:8889
+  pipelines:
+    traces:
+      receivers: [ otlp ]
+      processors: [ batch ]
+      exporters: [ otlp/insightfinder ]
+```
+
+### Configuration Explanation
+
+- `receivers.otlp.protocols.http.endpoint`: The endpoint on which the OpenTelemetry Collector will
+  listen for trace data.
+- `exporters` A list of exporters the collector can use.
+  - `otlp/insightfinder`: The exporter name. Exporter name should always start with `otlp/`.
+    - `endpoint`: The trace agent endpoint.
+    - `tls.insecure`: A boolean indicating whether to use insecure connection.
+    - `headers.ifuser`: The InsightFinder username.
+    - `headers.iflicenseKey`: The InsightFinder license key.
+    - `headers.ifproject`: The InsightFinder project name.
+
+# Run Trace Agent
 
 1. Setup JDK 21 or above.
-2. Put application.yml in the same directory as the jar file.
-3. Run the following command to start the application.
+2. Start OpenTelemetry Collector
+3. Put application.yml in the same directory as the jar file.
+4. Run the following command to start the application.
 
 ```bash
 java -jar <path>/traceserver-1.0.0-SNAPSHOT.jar
