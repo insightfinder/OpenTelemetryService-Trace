@@ -82,11 +82,11 @@ public class Config {
   }
 
   public int getGrpcMaxInboundMessageSizeInKB() {
-    return getGrpcConfig().getMaxInboundMessageSizeInKB();
-  }
-
-  public String getIFUsername() {
-    return getIFConfig().getUsername();
+    int maxInboundMessageSizeInKB = getGrpcConfig().getMaxInboundMessageSizeInKB();
+    if (maxInboundMessageSizeInKB == 0) {
+      maxInboundMessageSizeInKB = 16 * 1024;
+    }
+    return maxInboundMessageSizeInKB;
   }
 
   public String getIFServerUrl() {
@@ -99,10 +99,6 @@ public class Config {
 
   public String getIFCheckAndCreateUri() {
     return getIFConfig().getCheckAndCreateUri();
-  }
-
-  public String getIFLicenseKey() {
-    return getIFConfig().getLicenseKey();
   }
 
   public String getJaegerServerName() {
