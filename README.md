@@ -13,7 +13,8 @@ OpenTelemetry OTLP service that accept Trace data and Send to InsightFinder.
 
 InsightFinder requires a “OpenTelemetry Collector” to be set up to stream data.
 
-1. Download the OpenTelemetry release from GitHub release page.
+1. Download the OpenTelemetry official release
+   from [GitHub](https://github.com/open-telemetry/opentelemetry-collector-releases/releases).
 2. Extract the downloaded tarball:
 
 ```bash
