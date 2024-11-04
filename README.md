@@ -101,7 +101,7 @@ insightFinder:
   checkAndCreateUri: /api/v1/check-and-add-custom-project
 
 jaeger:
-  serverName: 18.212.200.99
+  serverName: localhost
   tlsEnabled: false
   grpcPort: 4317
   uiPort: 16686
