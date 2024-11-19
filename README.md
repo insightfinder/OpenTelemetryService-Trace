@@ -100,6 +100,7 @@ insightFinder:
   serverUrl: https://stg.insightfinder.com
   serverUri: /api/v1/customprojectrawdata
   checkAndCreateUri: /api/v1/check-and-add-custom-project
+  promptUri: /api/v1/prompt
 
 jaeger:
   serverName: localhost
@@ -132,6 +133,13 @@ data:
     error:
       fieldPaths:
         - "tags.error_messages"
+    promptExtraction:
+    input_prompt:
+      fieldPath: "tags.traceloop.entity.input"
+      valuePath: "inputs"
+    output_prompt:
+      fieldPath: "tags.traceloop.entity.output"
+      valuePath: "outputs"
 ```
 
 ### `grpc`
@@ -149,6 +157,7 @@ This section contains the configuration for connecting to InsightFinder.
 - `serverUrl`: The InsightFinder domain URL.
 - `serverUri`: The InsightFinder endpoint to receive trace data.
 - `checkAndCreateUri`: The InsightFinder endpoint for checking and creating custom projects.
+- `promptUri`: The InsightFinder endpoint for sending prompt data.
 
 ### `jaeger`
 
@@ -183,3 +192,11 @@ This section configures data attribute mappings. All the field paths are expecte
   be either String or Integer.
 - `attrMapping.error.fieldPaths`: JSON fields to extract error messages. The value should be either
   Boolean, JSONObject or JSONArray.
+- `attrMapping.promptExtraction`: JSON fields to extract prompt extraction.
+    - `attrMapping.input_prompt.fieldPath`: JSON field to extract input prompt.
+    - `attrMapping.input_prompt.valuePath`: JSON field to extract input prompt value if the value of
+      fieldPath is a Json.
+    - `attrMapping.output_prompt.fieldPath`: JSON field to extract output prompt.
+    - `attrMapping.output_prompt.valuePath`: JSON field to extract output prompt value if the value
+      of fieldPath is a Json.
+
