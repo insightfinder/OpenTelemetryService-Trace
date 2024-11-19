@@ -44,9 +44,16 @@ public class TraceWorker implements Runnable {
         continue;
       }
 
-      var traceDataBody = traceDataMapper.fromRawJaegerData(rawJaegerData, traceInfo);
-      if (traceDataBody != null && !traceDataBody.isEmpty()) {
-        insightFinderService.sendTraceData(traceDataBody, traceInfo);
+      var parsedTraceInfo = traceDataMapper.fromRawJaegerData(rawJaegerData, traceInfo);
+      if (parsedTraceInfo != null) {
+        var traceDataBody = parsedTraceInfo.getTraceDataBody();
+        if (traceDataBody != null && !traceDataBody.isEmpty()) {
+          insightFinderService.sendTraceData(traceDataBody, traceInfo);
+        }
+        var promptPairs = parsedTraceInfo.getPromptPairs();
+        if (promptPairs != null && !promptPairs.isEmpty()) {
+          insightFinderService.sendPromptData(promptPairs, traceInfo);
+        }
       }
     }
   }

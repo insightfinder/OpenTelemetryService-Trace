@@ -15,7 +15,9 @@ import com.insightfinder.config.Config;
 import com.insightfinder.model.message.TraceInfo;
 import com.insightfinder.model.request.IFLogTraceDataPayload;
 import com.insightfinder.model.request.IFLogTraceDataReceivePayload;
+import com.insightfinder.model.request.PromptData;
 import com.insightfinder.model.request.TraceDataBody;
+import io.opentelemetry.api.internal.StringUtils;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -184,6 +186,39 @@ public class InsightFinderService {
       }
     } catch (IOException e) {
       log.error("Error sending log data with exception: {}", e.getMessage());
+    }
+  }
+
+  public void sendPromptData(List<PromptData> promptPairs, TraceInfo traceInfo) {
+    if (StringUtils.isNullOrEmpty(config.getIFPromptUri())) {
+      return;
+    }
+    var iFPayload = new IFLogTraceDataReceivePayload();
+
+    iFPayload.setLogTraceDataList(JSON.toJSONString(promptPairs));
+    iFPayload.setUserName(traceInfo.getIfUser());
+    iFPayload.setLicenseKey(traceInfo.getIfLicenseKey());
+    iFPayload.setProjectName(traceInfo.getIfProject());
+    iFPayload.setInsightAgentType("LogTrace");
+
+    RequestBody body = RequestBody.create(JSON.toJSONBytes(iFPayload),
+        MediaType.get("application/json"));
+    Request request = new Request.Builder()
+        .url(config.getIFServerUrl() + config.getIFPromptUri())
+        .addHeader("agent-type", "Stream")
+        .addHeader("Content-Type", "application/json")
+        .post(body)
+        .build();
+
+    try (Response response = httpClient.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        log.error("Error sending prompt data with response: {}", response.message());
+      } else {
+        log.info("Sent prompt '{}' to project '{}' for user '{}'.",
+            traceInfo.getTraceId(), traceInfo.getIfProject(), traceInfo.getIfUser());
+      }
+    } catch (IOException e) {
+      log.error("Error sending prompt data with exception: {}", e.getMessage());
     }
   }
 }

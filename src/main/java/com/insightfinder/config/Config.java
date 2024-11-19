@@ -7,6 +7,7 @@ import com.insightfinder.config.model.DataConfig;
 import com.insightfinder.config.model.GrpcConfig;
 import com.insightfinder.config.model.InsightFinderConfig;
 import com.insightfinder.config.model.JaegerConfig;
+import com.insightfinder.config.model.PromptConfig;
 import com.insightfinder.config.model.ValueMapping;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -51,6 +52,10 @@ public class Config {
 
   public Map<String, ValueMapping> getAttrMapping() {
     return getData().getAttrMapping();
+  }
+
+  public Map<String, PromptConfig> getPromptExtraction() {
+    return getData().getPromptExtraction();
   }
 
   private AppConfig getAppConfig() {
@@ -99,6 +104,10 @@ public class Config {
 
   public String getIFCheckAndCreateUri() {
     return getIFConfig().getCheckAndCreateUri();
+  }
+
+  public String getIFPromptUri() {
+    return getIFConfig().getPromptUri();
   }
 
   public String getJaegerServerName() {

@@ -6,6 +6,7 @@ insightFinder:
   serverUrl: https://stg.insightfinder.com
   serverUri: /api/v1/customprojectrawdata
   checkAndCreateUri: /api/v1/check-and-add-custom-project
+  promptUri: /api/v1/prompt
 
 jaeger:
   serverName: 18.212.200.99
@@ -38,3 +39,10 @@ data:
     error:
       fieldPaths:
         - "tags.error_messages"
+  promptExtraction:
+    input_prompt:
+      fieldPath: "tags.traceloop.entity.input" # expect the field is in tags
+      valuePath: "inputs" # provide path if it's json
+    output_prompt:
+      fieldPath: "tags.traceloop.entity.output" # expect the field is in tags
+      valuePath: "outputs"

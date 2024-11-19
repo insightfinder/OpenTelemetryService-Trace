@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 public class DataConfig {
 
   private Map<String, ValueMapping> attrMapping;
+  private Map<String, PromptConfig> promptExtraction;
 }
