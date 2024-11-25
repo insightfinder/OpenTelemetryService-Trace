@@ -100,6 +100,9 @@ public class TraceDataMapper {
 
       traceDataBody.composeSpanRelations();
 
+      promptPairs.values()
+          .forEach(promptPair -> promptPair.setInstanceName(traceDataBody.getInstanceName()));
+
       return com.insightfinder.mapper.TraceInfo.builder()
           .traceDataBody(traceDataBody)
           .promptPairs(promptPairs.values().stream().toList())

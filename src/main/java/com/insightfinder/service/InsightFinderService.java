@@ -15,6 +15,7 @@ import com.insightfinder.config.Config;
 import com.insightfinder.model.message.TraceInfo;
 import com.insightfinder.model.request.IFLogTraceDataPayload;
 import com.insightfinder.model.request.IFLogTraceDataReceivePayload;
+import com.insightfinder.model.request.IFLogTracePromptDataReceivePayload;
 import com.insightfinder.model.request.PromptData;
 import com.insightfinder.model.request.TraceDataBody;
 import io.opentelemetry.api.internal.StringUtils;
@@ -193,13 +194,13 @@ public class InsightFinderService {
     if (StringUtils.isNullOrEmpty(config.getIFPromptUri())) {
       return;
     }
-    var iFPayload = new IFLogTraceDataReceivePayload();
+    var iFPayload = new IFLogTracePromptDataReceivePayload();
 
-    iFPayload.setLogTraceDataList(JSON.toJSONString(promptPairs));
+    iFPayload.setLogTracePromptDataList(JSON.toJSONString(promptPairs));
     iFPayload.setUserName(traceInfo.getIfUser());
     iFPayload.setLicenseKey(traceInfo.getIfLicenseKey());
     iFPayload.setProjectName(traceInfo.getIfProject());
-    iFPayload.setInsightAgentType("LogTrace");
+    iFPayload.setInsightAgentType("LogTracePrompt");
 
     RequestBody body = RequestBody.create(JSON.toJSONBytes(iFPayload),
         MediaType.get("application/json"));

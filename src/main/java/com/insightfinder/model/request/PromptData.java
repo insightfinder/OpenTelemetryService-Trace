@@ -10,6 +10,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 public class PromptData {
 
   private String traceId;
+  private String instanceName;
   private Prompt inputPrompt;
   private Prompt outputPrompt;
 
