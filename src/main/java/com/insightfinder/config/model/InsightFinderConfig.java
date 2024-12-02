@@ -13,4 +13,6 @@ public class InsightFinderConfig {
   private String serverUri;
   private String checkAndCreateUri;
   private String promptUri;
+  private String promptProjectName;
+  private String promptSystemName;
 }

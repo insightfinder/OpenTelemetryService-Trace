@@ -40,9 +40,12 @@ data:
       fieldPaths:
         - "tags.error_messages"
   promptExtraction:
-    input_prompt:
-      fieldPath: "tags.traceloop.entity.input" # expect the field is in tags
-      valuePath: "inputs" # provide path if it's json
-    output_prompt:
-      fieldPath: "tags.traceloop.entity.output" # expect the field is in tags
-      valuePath: "outputs"
+    processPath: "traceloop.entity.name"
+    processName: "RunnableSequence.workflow"
+    promptConfig:
+      input_prompt:
+        fieldPath: "tags.traceloop.entity.input"
+        valuePath: "inputs"
+      output_prompt:
+        fieldPath: "tags.traceloop.entity.output"
+        valuePath: "outputs"

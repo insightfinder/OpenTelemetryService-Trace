@@ -1,6 +1,9 @@
 package com.insightfinder.worker;
 
+import com.insightfinder.config.Config;
 import com.insightfinder.mapper.TraceDataMapper;
+import com.insightfinder.model.DataType;
+import com.insightfinder.model.ProjectCloudType;
 import com.insightfinder.model.message.TraceInfo;
 import com.insightfinder.service.InsightFinderService;
 import com.insightfinder.service.JaegerService;
@@ -14,6 +17,7 @@ public class TraceWorker implements Runnable {
   private final JaegerService jaegerService = JaegerService.getInstance();
   private final UniqueDelayQueueManager uniqueDelayQueueManager = UniqueDelayQueueManager.getInstance();
   private final TraceDataMapper traceDataMapper = TraceDataMapper.getInstance();
+  private final Config config = Config.getInstance();
 
   public TraceWorker(int threadNum) {
     log.info("Trace Worker thread {} started.", threadNum);
@@ -32,9 +36,16 @@ public class TraceWorker implements Runnable {
       log.info("Prepare to send trace '{}' to project '{}' for user '{}'.",
           traceInfo.getTraceId(), traceInfo.getIfProject(), traceInfo.getIfUser());
 
-      // Create Project IfNotExist and save the result to cache.
+      // Create trace Project IfNotExist and save the result to cache.
       if (!insightFinderService.isProjectCreated(traceInfo.getIfProject(), traceInfo.getIfProject(),
-          traceInfo.getIfUser(), traceInfo.getIfLicenseKey())) {
+          traceInfo.getIfUser(), traceInfo.getIfLicenseKey(), DataType.DATA_TYPE_TRACE,
+          ProjectCloudType.TRACE)) {
+        continue;
+      }
+
+      if (!insightFinderService.isProjectCreated(config.getPromptProjectName(),
+          config.getPromptSystemName(), traceInfo.getIfUser(), traceInfo.getIfLicenseKey(),
+          DataType.DATA_TYPE_LOG, ProjectCloudType.LOG)) {
         continue;
       }
 

@@ -272,9 +272,16 @@ public class TraceDataMapper {
   }
 
   private PromptData extractPromptPair(Map<String, Object> attributes) {
-    var promptMapping = Config.getInstance().getPromptExtraction();
-    var inputPromptMapping = promptMapping.get("input_prompt");
-    var outputPromptMapping = promptMapping.get("output_prompt");
+    var promptExtractionConfig = Config.getInstance().getPromptExtraction();
+    var processPath = promptExtractionConfig.getProcessPath();
+    var processName = promptExtractionConfig.getProcessName();
+    var processValueMapping = new ValueMapping(List.of(processPath));
+    var process = ParseUtil.getValueInAttrByPath(processValueMapping, attributes);
+    if (process == null || !process.equals(processName)) {
+      return null;
+    }
+    var inputPromptMapping = promptExtractionConfig.getPromptConfig().get("input_prompt");
+    var outputPromptMapping = promptExtractionConfig.getPromptConfig().get("output_prompt");
     var inputPrompt = extractPrompt(inputPromptMapping, attributes);
     var outputPrompt = extractPrompt(outputPromptMapping, attributes);
     if (!StringUtils.isNullOrEmpty(inputPrompt) && !StringUtils.isNullOrEmpty(outputPrompt)) {
