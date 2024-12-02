@@ -101,6 +101,8 @@ insightFinder:
   serverUri: /api/v1/customprojectrawdata
   checkAndCreateUri: /api/v1/check-and-add-custom-project
   promptUri: /api/v1/prompt
+  promptProjectName: promptTest
+  promptSystemName: TraceAgentTest
 
 jaeger:
   serverName: localhost
@@ -161,6 +163,8 @@ This section contains the configuration for connecting to InsightFinder.
 - `serverUri`: The InsightFinder endpoint to receive trace data.
 - `checkAndCreateUri`: The InsightFinder endpoint for checking and creating custom projects.
 - `promptUri`: The InsightFinder endpoint for sending prompt data.
+- `promptProjectName`: The InsightFinder project name for prompt data.
+- `promptSystemName`: The InsightFinder system name for prompt data.
 
 ### `jaeger`
 

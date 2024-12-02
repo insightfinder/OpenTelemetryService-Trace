@@ -7,6 +7,8 @@ insightFinder:
   serverUri: /api/v1/customprojectrawdata
   checkAndCreateUri: /api/v1/check-and-add-custom-project
   promptUri: /api/v1/prompt
+  promptProjectName: promptTest
+  promptSystemName: TraceAgentTest
 
 jaeger:
   serverName: 18.212.200.99
