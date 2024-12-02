@@ -134,12 +134,15 @@ data:
       fieldPaths:
         - "tags.error_messages"
     promptExtraction:
-    input_prompt:
-      fieldPath: "tags.traceloop.entity.input"
-      valuePath: "inputs"
-    output_prompt:
-      fieldPath: "tags.traceloop.entity.output"
-      valuePath: "outputs"
+      processPath: "tags.traceloop.entity.name"
+      processName: "RunnableSequence.workflow"
+      promptConfig:
+        input_prompt:
+          fieldPath: "tags.traceloop.entity.input"
+          valuePath: "inputs"
+        output_prompt:
+          fieldPath: "tags.traceloop.entity.output"
+          valuePath: "outputs"
 ```
 
 ### `grpc`
@@ -193,10 +196,16 @@ This section configures data attribute mappings. All the field paths are expecte
 - `attrMapping.error.fieldPaths`: JSON fields to extract error messages. The value should be either
   Boolean, JSONObject or JSONArray.
 - `attrMapping.promptExtraction`: JSON fields to extract prompt extraction.
-    - `attrMapping.input_prompt.fieldPath`: JSON field to extract input prompt.
-    - `attrMapping.input_prompt.valuePath`: JSON field to extract input prompt value if the value of
+    - `attrMapping.promptExtraction.processPath`: JSON field to find process name.
+    - `attrMapping.promptExtraction.processName`: The process name to extract prompt.
+    - `attrMapping.promptExtraction.promptConfig.input_prompt.fieldPath`: JSON field to extract
+      input prompt.
+    - `attrMapping.promptExtraction.promptConfig.input_prompt.valuePath`: JSON field to extract
+      input prompt value if the value of
       fieldPath is a Json.
-    - `attrMapping.output_prompt.fieldPath`: JSON field to extract output prompt.
-    - `attrMapping.output_prompt.valuePath`: JSON field to extract output prompt value if the value
+    - `attrMapping.promptExtraction.promptConfig.output_prompt.fieldPath`: JSON field to extract
+      output prompt.
+    - `attrMapping.promptExtraction.promptConfig.output_prompt.valuePath`: JSON field to extract
+      output prompt value if the value
       of fieldPath is a Json.
 
