@@ -45,7 +45,7 @@ public class TraceWorker implements Runnable {
 
       if (!insightFinderService.isProjectCreated(config.getPromptProjectName(),
           config.getPromptSystemName(), traceInfo.getIfUser(), traceInfo.getIfLicenseKey(),
-          DataType.DATA_TYPE_LOG, ProjectCloudType.PRIVATE_CLOUD)) {
+          DataType.DATA_TYPE_TRACE, ProjectCloudType.PRIVATE_CLOUD)) {
         continue;
       }
 
