@@ -5,7 +5,8 @@ import lombok.Getter;
 @Getter
 public enum ProjectCloudType {
   LOG("Log"),
-  TRACE("Trace");
+  TRACE("Trace"),
+  PRIVATE_CLOUD("PrivateCloud");
 
   private final String name;
 

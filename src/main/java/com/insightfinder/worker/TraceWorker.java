@@ -39,13 +39,13 @@ public class TraceWorker implements Runnable {
       // Create trace Project IfNotExist and save the result to cache.
       if (!insightFinderService.isProjectCreated(traceInfo.getIfProject(), traceInfo.getIfProject(),
           traceInfo.getIfUser(), traceInfo.getIfLicenseKey(), DataType.DATA_TYPE_TRACE,
-          ProjectCloudType.TRACE)) {
+          ProjectCloudType.PRIVATE_CLOUD)) {
         continue;
       }
 
       if (!insightFinderService.isProjectCreated(config.getPromptProjectName(),
           config.getPromptSystemName(), traceInfo.getIfUser(), traceInfo.getIfLicenseKey(),
-          DataType.DATA_TYPE_LOG, ProjectCloudType.LOG)) {
+          DataType.DATA_TYPE_LOG, ProjectCloudType.PRIVATE_CLOUD)) {
         continue;
       }
 

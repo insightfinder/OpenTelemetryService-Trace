@@ -200,7 +200,7 @@ public class InsightFinderService {
     iFPayload.setLogTracePromptDataList(JSON.toJSONString(promptPairs));
     iFPayload.setUserName(traceInfo.getIfUser());
     iFPayload.setLicenseKey(traceInfo.getIfLicenseKey());
-    iFPayload.setProjectName(traceInfo.getIfProject());
+    iFPayload.setProjectName(config.getPromptProjectName());
     iFPayload.setInsightAgentType("LogTracePrompt");
 
     RequestBody body = RequestBody.create(JSON.toJSONBytes(iFPayload),
@@ -217,7 +217,7 @@ public class InsightFinderService {
         log.error("Error sending prompt data with response: {}", response.message());
       } else {
         log.info("Sent prompt '{}' to project '{}' for user '{}'.",
-            traceInfo.getTraceId(), traceInfo.getIfProject(), traceInfo.getIfUser());
+            traceInfo.getTraceId(), config.getPromptProjectName(), traceInfo.getIfUser());
       }
     } catch (IOException e) {
       log.error("Error sending prompt data with exception: {}", e.getMessage());
