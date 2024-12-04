@@ -275,10 +275,10 @@ public class TraceDataMapper {
   private ContentData extractPromptPair(Map<String, Object> attributes) {
     var promptExtractionConfig = Config.getInstance().getPromptExtraction();
     var processPath = promptExtractionConfig.getProcessPath();
-    var processName = promptExtractionConfig.getProcessName();
+    var processNames = promptExtractionConfig.getProcessNames();
     var processValueMapping = new ValueMapping(List.of(processPath));
-    var process = ParseUtil.getValueInAttrByPath(processValueMapping, attributes);
-    if (process == null || !process.equals(processName)) {
+    var process = (String) ParseUtil.getValueInAttrByPath(processValueMapping, attributes);
+    if (process == null || !processNames.contains(process)) {
       return null;
     }
     var inputPromptMapping = promptExtractionConfig.getPromptConfig().get("input_prompt");

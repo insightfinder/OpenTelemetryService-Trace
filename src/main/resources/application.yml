@@ -43,7 +43,9 @@ data:
         - "tags.error_messages"
   promptExtraction:
     processPath: "traceloop.entity.name"
-    processName: "RunnableSequence.workflow"
+    processNames:
+      - "RunnableSequence.workflow"
+      - "RunnableWithMessageHistory.workflow"
     promptConfig:
       input_prompt:
         fieldPath: "tags.traceloop.entity.input"
