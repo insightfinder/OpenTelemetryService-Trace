@@ -7,16 +7,16 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 @Data
 @Builder
-public class PromptData {
+public class ContentData {
 
   private String traceId;
   private String instanceName;
-  private Prompt inputPrompt;
-  private Prompt outputPrompt;
+  private InputPrompt inputPrompt;
+  private ResponseRecord responseRecord;
 
   public boolean isEmpty() {
-    return (inputPrompt == null || inputPrompt.isEmpty()) && (outputPrompt == null
-        || outputPrompt.isEmpty());
+    return (inputPrompt == null || inputPrompt.isEmpty()) && (responseRecord == null
+        || responseRecord.isEmpty());
   }
 
   public void setSpanId(String spanId) {
@@ -41,8 +41,8 @@ public class PromptData {
   }
 
   private void setOutputPromptDuration(long duration) {
-    if (outputPrompt != null && !outputPrompt.isEmpty()) {
-      outputPrompt.setDuration(duration);
+    if (responseRecord != null && !responseRecord.isEmpty()) {
+      responseRecord.setDuration(duration);
     }
   }
 
@@ -53,8 +53,8 @@ public class PromptData {
   }
 
   private void setOutputPromptStartTime(long startTime) {
-    if (outputPrompt != null && !outputPrompt.isEmpty()) {
-      outputPrompt.setStartTime(startTime);
+    if (responseRecord != null && !responseRecord.isEmpty()) {
+      responseRecord.setStartTime(startTime);
     }
   }
 
@@ -65,15 +65,15 @@ public class PromptData {
   }
 
   private void setOutputPromptSpanId(String spanId) {
-    if (outputPrompt != null && !outputPrompt.isEmpty()) {
-      outputPrompt.setSpanId(spanId);
+    if (responseRecord != null && !responseRecord.isEmpty()) {
+      responseRecord.setSpanId(spanId);
     }
   }
 
   @Nullable
   public String getPromptHash() {
-    if (!inputPrompt.isEmpty() && !outputPrompt.isEmpty()) {
-      return DigestUtils.md5Hex(outputPrompt.getPrompt());
+    if (!inputPrompt.isEmpty() && !responseRecord.isEmpty()) {
+      return DigestUtils.md5Hex(responseRecord.getContent());
     }
     return null;
   }

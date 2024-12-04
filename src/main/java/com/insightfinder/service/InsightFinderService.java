@@ -15,10 +15,10 @@ import com.insightfinder.config.Config;
 import com.insightfinder.model.DataType;
 import com.insightfinder.model.ProjectCloudType;
 import com.insightfinder.model.message.TraceInfo;
+import com.insightfinder.model.request.ContentData;
 import com.insightfinder.model.request.IFLogTraceDataPayload;
 import com.insightfinder.model.request.IFLogTraceDataReceivePayload;
 import com.insightfinder.model.request.IFLogTracePromptDataReceivePayload;
-import com.insightfinder.model.request.PromptData;
 import com.insightfinder.model.request.TraceDataBody;
 import io.opentelemetry.api.internal.StringUtils;
 import java.io.IOException;
@@ -191,13 +191,13 @@ public class InsightFinderService {
     }
   }
 
-  public void sendPromptData(List<PromptData> promptPairs, TraceInfo traceInfo) {
+  public void sendPromptData(List<ContentData> promptResponsePairs, TraceInfo traceInfo) {
     if (StringUtils.isNullOrEmpty(config.getIFPromptUri())) {
       return;
     }
     var iFPayload = new IFLogTracePromptDataReceivePayload();
 
-    iFPayload.setLogTracePromptDataList(JSON.toJSONString(promptPairs));
+    iFPayload.setLogTracePromptDataList(JSON.toJSONString(promptResponsePairs));
     iFPayload.setUserName(traceInfo.getIfUser());
     iFPayload.setLicenseKey(traceInfo.getIfLicenseKey());
     iFPayload.setProjectName(config.getPromptProjectName());

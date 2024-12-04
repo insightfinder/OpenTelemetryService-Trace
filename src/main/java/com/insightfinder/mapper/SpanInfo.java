@@ -1,6 +1,6 @@
 package com.insightfinder.mapper;
 
-import com.insightfinder.model.request.PromptData;
+import com.insightfinder.model.request.ContentData;
 import com.insightfinder.model.request.SpanDataBody;
 import lombok.Builder;
 import lombok.Data;
@@ -10,5 +10,5 @@ import lombok.Data;
 public class SpanInfo {
 
   private final SpanDataBody spanDataBody;
-  private final PromptData promptData;
+  private final ContentData contentData;
 }

@@ -10,8 +10,9 @@ import com.insightfinder.config.Config;
 import com.insightfinder.config.model.PromptConfig;
 import com.insightfinder.config.model.ValueMapping;
 import com.insightfinder.model.message.TraceInfo;
-import com.insightfinder.model.request.Prompt;
-import com.insightfinder.model.request.PromptData;
+import com.insightfinder.model.request.ContentData;
+import com.insightfinder.model.request.InputPrompt;
+import com.insightfinder.model.request.ResponseRecord;
 import com.insightfinder.model.request.SpanDataBody;
 import com.insightfinder.model.request.SpanDataBody.SpanDataBodyBuilder;
 import com.insightfinder.model.request.TraceDataBody;
@@ -52,7 +53,7 @@ public class TraceDataMapper {
       }
       var rawTrace = rawData.getJSONObject(0);
       var rawSpans = rawTrace.getJSONArray("spans");
-      Map<String, PromptData> promptPairs = new HashMap<>();
+      Map<String, ContentData> promptPairs = new HashMap<>();
       for (int i = 0; i < rawSpans.size(); i++) {
         var curSpan = rawSpans.getJSONObject(i);
 
@@ -73,7 +74,7 @@ public class TraceDataMapper {
           var spanDataBody = spanInfo.getSpanDataBody();
           if (spanDataBody != null) {
             traceDataBody.addSpan(spanDataBody);
-            var promptPair = spanInfo.getPromptData();
+            var promptPair = spanInfo.getContentData();
             if (promptPair != null && !promptPair.isEmpty()) {
               promptPair.setTraceId(traceInfo.getTraceId());
               var key = promptPair.getPromptHash();
@@ -105,7 +106,7 @@ public class TraceDataMapper {
 
       return com.insightfinder.mapper.TraceInfo.builder()
           .traceDataBody(traceDataBody)
-          .promptPairs(promptPairs.values().stream().toList())
+          .promptResponsePairs(promptPairs.values().stream().toList())
           .build();
     } catch (Exception e) {
       log.error("Error mapping Jaeger raw data to IF trace: {}", e.getMessage());
@@ -171,9 +172,9 @@ public class TraceDataMapper {
       log.error("Error parsing total_tokens: {}", e.getMessage());
     }
 
-    PromptData promptData = null;
+    ContentData contentData = null;
     try {
-      promptData = extractPromptPair(attributes);
+      contentData = extractPromptPair(attributes);
     } catch (Exception e) {
       log.error("Error parsing prompt: {}", e.getMessage());
     }
@@ -189,14 +190,14 @@ public class TraceDataMapper {
     }
 
     SpanDataBody spanDataBody = spanDataBodyBuilder.build();
-    if (promptData != null) {
-      promptData.setSpanId(spanDataBody.getSpanID());
-      promptData.setDuration(spanDataBody.getDuration());
-      promptData.setStartTime(spanDataBody.getStartTime());
+    if (contentData != null) {
+      contentData.setSpanId(spanDataBody.getSpanID());
+      contentData.setDuration(spanDataBody.getDuration());
+      contentData.setStartTime(spanDataBody.getStartTime());
     }
     SpanInfo.SpanInfoBuilder spanInfoBuilder = SpanInfo.builder()
         .spanDataBody(spanDataBody)
-        .promptData(promptData);
+        .contentData(contentData);
     return spanInfoBuilder.build();
   }
 
@@ -271,7 +272,7 @@ public class TraceDataMapper {
     }
   }
 
-  private PromptData extractPromptPair(Map<String, Object> attributes) {
+  private ContentData extractPromptPair(Map<String, Object> attributes) {
     var promptExtractionConfig = Config.getInstance().getPromptExtraction();
     var processPath = promptExtractionConfig.getProcessPath();
     var processName = promptExtractionConfig.getProcessName();
@@ -285,9 +286,9 @@ public class TraceDataMapper {
     var inputPrompt = extractPrompt(inputPromptMapping, attributes);
     var outputPrompt = extractPrompt(outputPromptMapping, attributes);
     if (!StringUtils.isNullOrEmpty(inputPrompt) && !StringUtils.isNullOrEmpty(outputPrompt)) {
-      return PromptData.builder()
-          .inputPrompt(new Prompt(inputPrompt))
-          .outputPrompt(new Prompt(outputPrompt))
+      return ContentData.builder()
+          .inputPrompt(new InputPrompt(inputPrompt))
+          .responseRecord(new ResponseRecord(outputPrompt))
           .build();
     } else {
       return null;
