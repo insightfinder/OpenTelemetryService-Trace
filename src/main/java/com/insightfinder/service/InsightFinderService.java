@@ -12,10 +12,15 @@ import static com.insightfinder.config.WebClientConstant.HTTP_REQUEST_PARAM_USER
 
 import com.alibaba.fastjson2.JSON;
 import com.insightfinder.config.Config;
+import com.insightfinder.model.DataType;
+import com.insightfinder.model.ProjectCloudType;
 import com.insightfinder.model.message.TraceInfo;
+import com.insightfinder.model.request.ContentData;
 import com.insightfinder.model.request.IFLogTraceDataPayload;
 import com.insightfinder.model.request.IFLogTraceDataReceivePayload;
+import com.insightfinder.model.request.IFLogTracePromptDataReceivePayload;
 import com.insightfinder.model.request.TraceDataBody;
+import io.opentelemetry.api.internal.StringUtils;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -35,13 +40,11 @@ public class InsightFinderService {
   private static final ConcurrentHashMap<String, Boolean> projectCache = new ConcurrentHashMap<>();
   private static final Config config = Config.getInstance();
   private static final String IF_AGENT_TYPE_CUSTOM = "Custom";
-  private static final String IF_AGENT_TYPE_TRACE = "Trace";
   private static final String OPERATION_CHECK = "check";
   private static final String OPERATION_CREATE = "create";
   private static final String PRIVATE_CLOUD = "PrivateCloud";
   private static final String RESPONSE_IS_PROJECT_EXIST = "isProjectExist";
   private static final String RESPONSE_SUCCESS = "success";
-  private static final String DATA_TYPE_LOG = "Log";
   private static InsightFinderService instance;
   private final OkHttpClient httpClient = new OkHttpClient();
 
@@ -56,11 +59,12 @@ public class InsightFinderService {
   }
 
   public boolean isProjectCreated(String projectName, String systemName, String user,
-      String licenseKey) {
+      String licenseKey, DataType dataType, ProjectCloudType projectCloudType) {
     if (isProjectExisted(projectName)) {
       return true;
     }
-    boolean hasProject = createProjectIfNotExist(projectName, systemName, user, licenseKey);
+    boolean hasProject = createProjectIfNotExist(projectName, systemName, user, licenseKey,
+        dataType, projectCloudType);
     if (hasProject) {
       projectCache.put(projectName, true);
     }
@@ -72,7 +76,7 @@ public class InsightFinderService {
   }
 
   private boolean createProjectIfNotExist(String projectName, String systemName,
-      String user, String licenseKey) {
+      String user, String licenseKey, DataType dataType, ProjectCloudType projectCloudType) {
     String checkAndCreateURL = config.getIFServerUrl() + config.getIFCheckAndCreateUri();
     boolean projectExist;
     RequestBody emptyFormBody = new FormBody.Builder().build();
@@ -114,9 +118,9 @@ public class InsightFinderService {
           .addQueryParameter(HTTP_REQUEST_PARAM_PROJECT_NAME, projectName)
           .addQueryParameter(HTTP_REQUEST_PARAM_SYSTEM_NAME, systemName)
           .addQueryParameter(HTTP_REQUEST_PARAM_INSTANCE_TYPE, PRIVATE_CLOUD)
-          .addQueryParameter(HTTP_REQUEST_PARAM_PROJECT_CLOUD_TYPE, IF_AGENT_TYPE_TRACE)
+          .addQueryParameter(HTTP_REQUEST_PARAM_PROJECT_CLOUD_TYPE, projectCloudType.getName())
           .addQueryParameter(HTTP_REQUEST_PARAM_AGENT_TYPE, IF_AGENT_TYPE_CUSTOM)
-          .addQueryParameter(HTTP_REQUEST_PARAM_DATA_TYPE, DATA_TYPE_LOG)
+          .addQueryParameter(HTTP_REQUEST_PARAM_DATA_TYPE, dataType.getName())
           .addQueryParameter(HTTP_REQUEST_PARAM_OPERATION, OPERATION_CREATE).build();
       var createProjectRequest = new Request.Builder().url(createProjectUrl)
           .addHeader("Content-Type", "application/x-www-form-urlencoded")
@@ -184,6 +188,39 @@ public class InsightFinderService {
       }
     } catch (IOException e) {
       log.error("Error sending log data with exception: {}", e.getMessage());
+    }
+  }
+
+  public void sendPromptData(List<ContentData> promptResponsePairs, TraceInfo traceInfo) {
+    if (StringUtils.isNullOrEmpty(config.getIFPromptUri())) {
+      return;
+    }
+    var iFPayload = new IFLogTracePromptDataReceivePayload();
+
+    iFPayload.setLogTracePromptDataList(JSON.toJSONString(promptResponsePairs));
+    iFPayload.setUserName(traceInfo.getIfUser());
+    iFPayload.setLicenseKey(traceInfo.getIfLicenseKey());
+    iFPayload.setProjectName(config.getPromptProjectName());
+    iFPayload.setInsightAgentType("LogTracePrompt");
+
+    RequestBody body = RequestBody.create(JSON.toJSONBytes(iFPayload),
+        MediaType.get("application/json"));
+    Request request = new Request.Builder()
+        .url(config.getIFServerUrl() + config.getIFPromptUri())
+        .addHeader("agent-type", "Stream")
+        .addHeader("Content-Type", "application/json")
+        .post(body)
+        .build();
+
+    try (Response response = httpClient.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        log.error("Error sending prompt data with response: {}", response.message());
+      } else {
+        log.info("Sent prompt '{}' to project '{}' for user '{}'.",
+            traceInfo.getTraceId(), config.getPromptProjectName(), traceInfo.getIfUser());
+      }
+    } catch (IOException e) {
+      log.error("Error sending prompt data with exception: {}", e.getMessage());
     }
   }
 }
