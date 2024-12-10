@@ -7,13 +7,19 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
 import com.insightfinder.config.Config;
+import com.insightfinder.config.model.PromptConfig;
 import com.insightfinder.config.model.ValueMapping;
 import com.insightfinder.model.message.TraceInfo;
+import com.insightfinder.model.request.ContentData;
+import com.insightfinder.model.request.InputPrompt;
+import com.insightfinder.model.request.ResponseRecord;
 import com.insightfinder.model.request.SpanDataBody;
 import com.insightfinder.model.request.SpanDataBody.SpanDataBodyBuilder;
 import com.insightfinder.model.request.TraceDataBody;
 import com.insightfinder.util.ParseUtil;
 import io.opentelemetry.api.internal.StringUtils;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,7 +40,8 @@ public class TraceDataMapper {
     return instance;
   }
 
-  public TraceDataBody fromRawJaegerData(JSONObject rawJaegerData, TraceInfo traceInfo) {
+  public com.insightfinder.mapper.TraceInfo fromRawJaegerData(JSONObject rawJaegerData,
+      TraceInfo traceInfo) {
     try {
       if (rawJaegerData == null || rawJaegerData.isEmpty()) {
         return null;
@@ -46,7 +53,7 @@ public class TraceDataMapper {
       }
       var rawTrace = rawData.getJSONObject(0);
       var rawSpans = rawTrace.getJSONArray("spans");
-
+      Map<String, ContentData> promptPairs = new HashMap<>();
       for (int i = 0; i < rawSpans.size(); i++) {
         var curSpan = rawSpans.getJSONObject(i);
 
@@ -62,9 +69,29 @@ public class TraceDataMapper {
           traceDataBody.setDuration(traceDataBody.getEndTime() - traceDataBody.getStartTime());
         }
 
-        SpanDataBody spanBody = getSpanDataBody(curSpan);
-        if (spanBody != null) {
-          traceDataBody.addSpan(spanBody);
+        SpanInfo spanInfo = getSpanDataBody(curSpan);
+        if (spanInfo != null) {
+          var spanDataBody = spanInfo.getSpanDataBody();
+          if (spanDataBody != null) {
+            traceDataBody.addSpan(spanDataBody);
+            var promptPair = spanInfo.getContentData();
+            if (promptPair != null && !promptPair.isEmpty()) {
+              promptPair.setTraceId(traceInfo.getTraceId());
+              var key = promptPair.getPromptHash();
+              if (key != null) {
+                if (promptPairs.containsKey(key)) {
+                  var existingPromptPair = promptPairs.get(key);
+                  var existingPromptDuration = existingPromptPair.getInputPrompt().getDuration();
+                  var newPromptDuration = promptPair.getInputPrompt().getDuration();
+                  if (newPromptDuration > existingPromptDuration) {
+                    promptPairs.put(key, promptPair);
+                  }
+                } else {
+                  promptPairs.put(key, promptPair);
+                }
+              }
+            }
+          }
         }
       }
       var processes = rawTrace.getJSONObject("processes");
@@ -74,14 +101,20 @@ public class TraceDataMapper {
 
       traceDataBody.composeSpanRelations();
 
-      return traceDataBody;
+      promptPairs.values()
+          .forEach(promptPair -> promptPair.setInstanceName(traceDataBody.getInstanceName()));
+
+      return com.insightfinder.mapper.TraceInfo.builder()
+          .traceDataBody(traceDataBody)
+          .promptResponsePairs(promptPairs.values().stream().toList())
+          .build();
     } catch (Exception e) {
       log.error("Error mapping Jaeger raw data to IF trace: {}", e.getMessage());
       return null;
     }
   }
 
-  private SpanDataBody getSpanDataBody(JSONObject rawSpanData) {
+  private SpanInfo getSpanDataBody(JSONObject rawSpanData) {
     if (rawSpanData == null || rawSpanData.isEmpty()) {
       return null;
     }
@@ -139,6 +172,13 @@ public class TraceDataMapper {
       log.error("Error parsing total_tokens: {}", e.getMessage());
     }
 
+    ContentData contentData = null;
+    try {
+      contentData = extractPromptPair(attributes);
+    } catch (Exception e) {
+      log.error("Error parsing prompt: {}", e.getMessage());
+    }
+
     var references = rawSpanData.getJSONArray("references");
     if (!references.isEmpty()) {
       var reference = references.getJSONObject(0);
@@ -148,7 +188,17 @@ public class TraceDataMapper {
         spanDataBodyBuilder.parentSpanId("");
       }
     }
-    return spanDataBodyBuilder.build();
+
+    SpanDataBody spanDataBody = spanDataBodyBuilder.build();
+    if (contentData != null) {
+      contentData.setSpanId(spanDataBody.getSpanID());
+      contentData.setDuration(spanDataBody.getDuration());
+      contentData.setStartTime(spanDataBody.getStartTime());
+    }
+    SpanInfo.SpanInfoBuilder spanInfoBuilder = SpanInfo.builder()
+        .spanDataBody(spanDataBody)
+        .contentData(contentData);
+    return spanInfoBuilder.build();
   }
 
   private void extractTotalTokens(Map<String, Object> attributes) {
@@ -219,6 +269,55 @@ public class TraceDataMapper {
       }
     } else {
       spanDataBodyBuilder.error(false);
+    }
+  }
+
+  private ContentData extractPromptPair(Map<String, Object> attributes) {
+    var promptExtractionConfig = Config.getInstance().getPromptExtraction();
+    var processPath = promptExtractionConfig.getProcessPath();
+    var processNames = promptExtractionConfig.getProcessNames();
+    var processValueMapping = new ValueMapping(List.of(processPath));
+    var process = (String) ParseUtil.getValueInAttrByPath(processValueMapping, attributes);
+    if (process == null || !processNames.contains(process)) {
+      return null;
+    }
+    var inputPromptMapping = promptExtractionConfig.getPromptConfig().get("input_prompt");
+    var outputPromptMapping = promptExtractionConfig.getPromptConfig().get("output_prompt");
+    var inputPrompt = extractPrompt(inputPromptMapping, attributes);
+    var outputPrompt = extractPrompt(outputPromptMapping, attributes);
+    if (!StringUtils.isNullOrEmpty(inputPrompt) && !StringUtils.isNullOrEmpty(outputPrompt)) {
+      return ContentData.builder()
+          .inputPrompt(new InputPrompt(inputPrompt))
+          .responseRecord(new ResponseRecord(outputPrompt))
+          .build();
+    } else {
+      return null;
+    }
+  }
+
+  private String extractPrompt(PromptConfig promptConfig, Map<String, Object> attributes) {
+    if (promptConfig == null) {
+      return null;
+    }
+    var promptPath = promptConfig.getFieldPath();
+    if (StringUtils.isNullOrEmpty(promptPath)) {
+      return null;
+    }
+    var promptValueMapping = new ValueMapping(List.of(promptPath));
+    var inputPromptValue = ParseUtil.getValueInAttrByPath(promptValueMapping, attributes);
+    if (!(inputPromptValue instanceof String)) {
+      return null;
+    }
+    if (!StringUtils.isNullOrEmpty(promptConfig.getValuePath())) {
+      try {
+        var promptJson = JSONObject.parse((String) inputPromptValue);
+        return promptJson.getString(promptConfig.getValuePath());
+      } catch (Exception e) {
+        log.debug("Error parsing prompt JSON {}: {}", inputPromptValue, e.getMessage());
+        return null;
+      }
+    } else {
+      return (String) inputPromptValue;
     }
   }
 }
