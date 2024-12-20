@@ -47,7 +47,7 @@ public class GrpcTraceService extends TraceServiceGrpc.TraceServiceImplBase {
 
           uniqueDelayQueueManager.offerMessage(
               new TraceInfo(traceID, metadata.getUsername(), metadata.getProjectName(),
-                  metadata.getLicenseKey()));
+                  metadata.getSystemName(), metadata.getLicenseKey()));
         }
       }
     }

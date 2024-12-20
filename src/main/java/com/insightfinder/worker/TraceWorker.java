@@ -8,6 +8,7 @@ import com.insightfinder.model.message.TraceInfo;
 import com.insightfinder.service.InsightFinderService;
 import com.insightfinder.service.JaegerService;
 import com.insightfinder.service.UniqueDelayQueueManager;
+import io.opentelemetry.api.internal.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -18,6 +19,7 @@ public class TraceWorker implements Runnable {
   private final UniqueDelayQueueManager uniqueDelayQueueManager = UniqueDelayQueueManager.getInstance();
   private final TraceDataMapper traceDataMapper = TraceDataMapper.getInstance();
   private final Config config = Config.getInstance();
+  private static final String PROMPT_PROJECT_SUFFIX = "-Prompt";
 
   public TraceWorker(int threadNum) {
     log.info("Trace Worker thread {} started.", threadNum);
@@ -37,17 +39,25 @@ public class TraceWorker implements Runnable {
           traceInfo.getTraceId(), traceInfo.getIfProject(), traceInfo.getIfUser());
 
       // Create trace Project IfNotExist and save the result to cache.
-      if (!insightFinderService.isProjectCreated(traceInfo.getIfProject(), traceInfo.getIfProject(),
+      if (!insightFinderService.isProjectCreated(traceInfo.getIfProject(), traceInfo.getIfSystem(),
           traceInfo.getIfUser(), traceInfo.getIfLicenseKey(), DataType.DATA_TYPE_TRACE,
           ProjectCloudType.PRIVATE_CLOUD)) {
         continue;
       }
-
-      if (!insightFinderService.isProjectCreated(config.getPromptProjectName(),
-          config.getPromptSystemName(), traceInfo.getIfUser(), traceInfo.getIfLicenseKey(),
+      String promptProjectName =
+          StringUtils.isNullOrEmpty(config.getPromptProjectName()) ?
+              traceInfo.getIfProject() + PROMPT_PROJECT_SUFFIX : config.getPromptProjectName();
+      String promptProjectSystemName =
+          StringUtils.isNullOrEmpty(config.getPromptSystemName()) ? traceInfo.getIfSystem() :
+              config.getPromptSystemName();
+      if (!insightFinderService.isProjectCreated(promptProjectName, promptProjectSystemName,
+          traceInfo.getIfUser(), traceInfo.getIfLicenseKey(),
           DataType.DATA_TYPE_TRACE, ProjectCloudType.PRIVATE_CLOUD)) {
         continue;
       }
+      var promptInfo = new TraceInfo(traceInfo.getTraceId(), traceInfo.getIfUser(),
+          promptProjectName,
+          promptProjectSystemName, traceInfo.getIfLicenseKey());
 
       // Get Trace data from Jaeger
       var rawJaegerData = jaegerService.getTraceData(traceInfo.getTraceId());
@@ -63,7 +73,7 @@ public class TraceWorker implements Runnable {
         }
         var promptResponsePairs = parsedTraceInfo.getPromptResponsePairs();
         if (promptResponsePairs != null && !promptResponsePairs.isEmpty()) {
-          insightFinderService.sendPromptData(promptResponsePairs, traceInfo);
+          insightFinderService.sendPromptData(promptResponsePairs, promptInfo);
         }
       }
     }

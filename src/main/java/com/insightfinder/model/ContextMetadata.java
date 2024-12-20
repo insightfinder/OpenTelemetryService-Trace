@@ -9,5 +9,6 @@ public class ContextMetadata {
 
   private String username;
   private String projectName;
+  private String systemName;
   private String licenseKey;
 }

@@ -29,6 +29,10 @@ public class ParseUtil {
     return metadata.get(Metadata.Key.of("ifproject", Metadata.ASCII_STRING_MARSHALLER));
   }
 
+  public static String getSystemFromMedata(Metadata metadata) {
+    return metadata.get(Metadata.Key.of("ifsystem", Metadata.ASCII_STRING_MARSHALLER));
+  }
+
   public static Map<String, Object> getAttrMapFromJsonArray(JSONArray attrMap) {
 
     var result = new HashMap<String, Object>();
