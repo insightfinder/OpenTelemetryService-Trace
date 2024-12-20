@@ -25,6 +25,7 @@ public class GrpcServerInterceptor implements ServerInterceptor {
       Metadata metadata, ServerCallHandler<ReqT, RespT> serverCallHandler) {
     String ifUser = ParseUtil.getIfUserFromMetadata(metadata);
     String ifProject = ParseUtil.getProjectFromMedata(metadata);
+    String ifSystem = ParseUtil.getSystemFromMedata(metadata);
     String ifLicenseKey = ParseUtil.getLicenseKeyFromMedata(metadata);
 
     if (StringUtils.isNullOrEmpty(ifUser)) {
@@ -43,6 +44,14 @@ public class GrpcServerInterceptor implements ServerInterceptor {
       return new ServerCall.Listener<>() {
       };
     }
+    if (StringUtils.isNullOrEmpty(ifSystem)) {
+      log.error("'ifsystem' header of OpenTelemetry exporter is empty.");
+      Status status = Status.FAILED_PRECONDITION.withDescription(
+          "'ifsystem' header of OpenTelemetry exporter is empty.");
+      serverCall.close(status, new Metadata());
+      return new ServerCall.Listener<>() {
+      };
+    }
     if (StringUtils.isNullOrEmpty(ifLicenseKey)) {
       log.error("'iflicenseKey' header of OpenTelemetry exporter is empty.");
       Status status = Status.FAILED_PRECONDITION.withDescription(
@@ -52,7 +61,7 @@ public class GrpcServerInterceptor implements ServerInterceptor {
       };
     }
     Context context = Context.current()
-        .withValue(METADATA_KEY, new ContextMetadata(ifUser, ifProject, ifLicenseKey));
+        .withValue(METADATA_KEY, new ContextMetadata(ifUser, ifProject, ifSystem, ifLicenseKey));
     return Contexts.interceptCall(context, serverCall, metadata, serverCallHandler);
   }
 }

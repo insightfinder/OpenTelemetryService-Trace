@@ -21,13 +21,16 @@ public class TraceInfo implements Delayed {
   private String traceId;
   private String ifUser;
   private String ifProject;
+  private String ifSystem;
   private String ifLicenseKey;
 
 
-  public TraceInfo(String traceId, String ifUser, String ifProject, String ifLicenseKey) {
+  public TraceInfo(String traceId, String ifUser, String ifProject, String ifSystem,
+      String ifLicenseKey) {
     this.traceId = traceId;
     this.ifUser = ifUser;
     this.ifProject = ifProject;
+    this.ifSystem = ifSystem;
     this.ifLicenseKey = ifLicenseKey;
 
     // Each message will be delayed for 1min to get received by the consumers.

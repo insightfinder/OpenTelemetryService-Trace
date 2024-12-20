@@ -60,6 +60,12 @@ public class InsightFinderService {
 
   public boolean isProjectCreated(String projectName, String systemName, String user,
       String licenseKey, DataType dataType, ProjectCloudType projectCloudType) {
+    if (StringUtils.isNullOrEmpty(projectName) || StringUtils.isNullOrEmpty(systemName)
+        || StringUtils.isNullOrEmpty(user) || StringUtils.isNullOrEmpty(licenseKey)) {
+      log.warn("Invalid project creation params: projectName={}, systemName={}, user={}, "
+          + "licenseKey={}", projectName, systemName, user, licenseKey);
+      return false;
+    }
     if (isProjectExisted(projectName)) {
       return true;
     }
@@ -72,6 +78,9 @@ public class InsightFinderService {
   }
 
   private boolean isProjectExisted(String projectName) {
+    if (projectName == null) {
+      return false;
+    }
     return projectCache.containsKey(projectName);
   }
 
@@ -153,6 +162,9 @@ public class InsightFinderService {
   }
 
   public void sendTraceData(TraceDataBody traceDataBody, TraceInfo traceInfo) {
+    if (StringUtils.isNullOrEmpty(traceInfo.getIfProject())) {
+      return;
+    }
     var iFLogTraceData = new IFLogTraceDataPayload();
     var iFPayload = new IFLogTraceDataReceivePayload();
 
@@ -200,7 +212,7 @@ public class InsightFinderService {
     iFPayload.setLogTracePromptDataList(JSON.toJSONString(promptResponsePairs));
     iFPayload.setUserName(traceInfo.getIfUser());
     iFPayload.setLicenseKey(traceInfo.getIfLicenseKey());
-    iFPayload.setProjectName(config.getPromptProjectName());
+    iFPayload.setProjectName(traceInfo.getIfProject());
     iFPayload.setInsightAgentType("LogTracePrompt");
 
     RequestBody body = RequestBody.create(JSON.toJSONBytes(iFPayload),
@@ -217,7 +229,7 @@ public class InsightFinderService {
         log.error("Error sending prompt data with response: {}", response.message());
       } else {
         log.info("Sent prompt '{}' to project '{}' for user '{}'.",
-            traceInfo.getTraceId(), config.getPromptProjectName(), traceInfo.getIfUser());
+            traceInfo.getTraceId(), traceInfo.getIfProject(), traceInfo.getIfUser());
       }
     } catch (IOException e) {
       log.error("Error sending prompt data with exception: {}", e.getMessage());
