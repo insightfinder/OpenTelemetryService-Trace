@@ -1,12 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+  <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="FILE">
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+    <file>${LOG_FILE}</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <!-- Rotate logs daily and limit file size -->
+      <fileNamePattern>logs/application-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+      <maxFileSize>10MB</maxFileSize>
+      <maxHistory>7</maxHistory>
+    </rollingPolicy>
+  </appender>
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
       <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
   </appender>
+  <!-- Rolling File Appender -->
+  <property name="LOG_FILE" value="logs/traceAgent.log"/>
 
   <root level="INFO">
     <appender-ref ref="STDOUT" />
+    <appender-ref ref="FILE"/>
   </root>
 </configuration>

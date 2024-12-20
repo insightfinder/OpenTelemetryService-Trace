@@ -22,6 +22,7 @@ import com.insightfinder.model.request.IFLogTracePromptDataReceivePayload;
 import com.insightfinder.model.request.TraceDataBody;
 import io.opentelemetry.api.internal.StringUtils;
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -195,8 +196,10 @@ public class InsightFinderService {
       if (!response.isSuccessful()) {
         log.error("Error sending log data with response: {}", response.message());
       } else {
-        log.info("Sent trace '{}' to project '{}' for user '{}'.",
-            traceInfo.getTraceId(), traceInfo.getIfProject(), traceInfo.getIfUser());
+        log.info("Sent trace '{}' startTime: '{}' to project '{}' for user '{}'.",
+            traceInfo.getTraceId(), new Date(traceDataBody.getStartTime()),
+            traceInfo.getIfProject(),
+            traceInfo.getIfUser());
       }
     } catch (IOException e) {
       log.error("Error sending log data with exception: {}", e.getMessage());
