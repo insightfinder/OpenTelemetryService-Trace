@@ -34,7 +34,9 @@ public class JaegerService {
     // Init gRPC client
     String grpcUrl = "%s:%d".formatted(config.getJaegerServerName(), config.getJaegerGrpcPort());
     ManagedChannel channel = ManagedChannelBuilder.forTarget(grpcUrl).usePlaintext().build();
-    this.traceServiceStub = TraceServiceGrpc.newBlockingStub(channel);
+    this.traceServiceStub = TraceServiceGrpc.newBlockingStub(channel)
+        .withMaxOutboundMessageSize(Integer.MAX_VALUE)
+        .withMaxInboundMessageSize(Integer.MAX_VALUE);
   }
 
   public static JaegerService getInstance() {
