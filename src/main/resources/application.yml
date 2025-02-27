@@ -41,6 +41,9 @@ data:
     error:
       fieldPaths:
         - "tags.error_messages"
+    username:
+      fieldPaths:
+        - "tags.username"
   promptExtraction:
     processPath: "traceloop.entity.name"
     processNames:

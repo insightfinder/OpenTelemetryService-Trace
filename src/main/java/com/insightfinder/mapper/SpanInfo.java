@@ -11,4 +11,5 @@ public class SpanInfo {
 
   private final SpanDataBody spanDataBody;
   private final ContentData contentData;
+  private final String username;
 }

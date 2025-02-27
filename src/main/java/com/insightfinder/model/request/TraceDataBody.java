@@ -36,6 +36,9 @@ public class TraceDataBody {
   @JSONField(name = "processes")
   private JSONObject processes;
 
+  @JSONField(name = "username")
+  private String username;
+
   private transient Map<String, Set<SpanDataBody>> childSpans = new HashMap<>(); // parentSpanId -> childSpans
 
   public void addSpan(SpanDataBody span) {
