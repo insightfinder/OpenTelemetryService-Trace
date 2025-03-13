@@ -105,11 +105,15 @@ public class TraceDataMapper {
       traceDataBody.setProcesses(processes);
       traceDataBody.setInstanceName(processes.getJSONObject("p1").getString("serviceName"));
       traceDataBody.setTraceID(traceInfo.getTraceId());
+      traceDataBody.setUsername(username);
 
       traceDataBody.composeSpanRelations();
 
       promptPairs.values()
-          .forEach(promptPair -> promptPair.setInstanceName(traceDataBody.getInstanceName()));
+          .forEach(promptPair -> {
+            promptPair.setInstanceName(traceDataBody.getInstanceName());
+            promptPair.setUsername(traceDataBody.getUsername());
+          });
 
       return com.insightfinder.mapper.TraceInfo.builder()
           .traceDataBody(traceDataBody)

@@ -181,8 +181,9 @@ public class InsightFinderService {
     iFPayload.setLicenseKey(traceInfo.getIfLicenseKey());
     iFPayload.setProjectName(traceInfo.getIfProject());
     iFPayload.setInsightAgentType("LogTrace");
-
-//    log.info(JSON.toJSONString(iFPayload));
+    if (config.isTraceLogEnabled()) {
+      log.info("Trace Payload {}", JSON.toJSONString(iFPayload));
+    }
     RequestBody body = RequestBody.create(JSON.toJSONBytes(iFPayload),
         MediaType.get("application/json"));
     Request request = new Request.Builder()
@@ -217,6 +218,10 @@ public class InsightFinderService {
     iFPayload.setLicenseKey(traceInfo.getIfLicenseKey());
     iFPayload.setProjectName(traceInfo.getIfProject());
     iFPayload.setInsightAgentType("LogTracePrompt");
+
+    if (config.isPromptLogEnabled()) {
+      log.info("Prompt Payload {}", JSON.toJSONString(iFPayload));
+    }
 
     RequestBody body = RequestBody.create(JSON.toJSONBytes(iFPayload),
         MediaType.get("application/json"));
