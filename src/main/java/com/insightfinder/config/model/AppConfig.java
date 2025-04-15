@@ -11,6 +11,8 @@ public class AppConfig {
 
   private int traceWorkerNum;
   private long traceDelayInMillis;
+  private boolean enableTraceLog;
+  private boolean enablePromptLog;
   private TLS tls;
 
   @Data

@@ -19,6 +19,8 @@ jaeger:
 app:
   traceWorkerNum: 5
   traceDelayInMillis: 60000
+  enableTraceLog: true
+  enablePromptLog: true
   tls:
     enabled: false
     # Path to full-chain certificate file (PEM)
@@ -41,6 +43,9 @@ data:
     error:
       fieldPaths:
         - "tags.error_messages"
+    username:
+      fieldPaths:
+        - "tags.username"
   promptExtraction:
     processPath: "traceloop.entity.name"
     processNames:

@@ -10,6 +10,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 public class ContentData {
 
   private String traceId;
+  private String username;
   private String instanceName;
   private InputPrompt inputPrompt;
   private ResponseRecord responseRecord;

@@ -90,6 +90,14 @@ public class Config {
     return getAppConfig().getTraceDelayInMillis();
   }
 
+  public boolean isTraceLogEnabled() {
+    return getAppConfig().isEnableTraceLog();
+  }
+
+  public boolean isPromptLogEnabled() {
+    return getAppConfig().isEnablePromptLog();
+  }
+
   public int getGrpcPort() {
     return getGrpcConfig().getPort();
   }

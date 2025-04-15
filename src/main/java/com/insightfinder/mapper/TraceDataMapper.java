@@ -54,6 +54,7 @@ public class TraceDataMapper {
       var rawTrace = rawData.getJSONObject(0);
       var rawSpans = rawTrace.getJSONArray("spans");
       Map<String, ContentData> promptPairs = new HashMap<>();
+      String username = null;
       for (int i = 0; i < rawSpans.size(); i++) {
         var curSpan = rawSpans.getJSONObject(i);
 
@@ -74,6 +75,12 @@ public class TraceDataMapper {
           var spanDataBody = spanInfo.getSpanDataBody();
           if (spanDataBody != null) {
             traceDataBody.addSpan(spanDataBody);
+            String spanUsername = spanInfo.getUsername();
+            if (!StringUtils.isNullOrEmpty(spanUsername)) {
+              if (StringUtils.isNullOrEmpty(username)) {
+                username = spanUsername;
+              }
+            }
             var promptPair = spanInfo.getContentData();
             if (promptPair != null && !promptPair.isEmpty()) {
               promptPair.setTraceId(traceInfo.getTraceId());
@@ -98,11 +105,15 @@ public class TraceDataMapper {
       traceDataBody.setProcesses(processes);
       traceDataBody.setInstanceName(processes.getJSONObject("p1").getString("serviceName"));
       traceDataBody.setTraceID(traceInfo.getTraceId());
+      traceDataBody.setUsername(username);
 
       traceDataBody.composeSpanRelations();
 
       promptPairs.values()
-          .forEach(promptPair -> promptPair.setInstanceName(traceDataBody.getInstanceName()));
+          .forEach(promptPair -> {
+            promptPair.setInstanceName(traceDataBody.getInstanceName());
+            promptPair.setUsername(traceDataBody.getUsername());
+          });
 
       return com.insightfinder.mapper.TraceInfo.builder()
           .traceDataBody(traceDataBody)
@@ -166,6 +177,13 @@ public class TraceDataMapper {
       log.error("Error parsing prompt_response: {}", e.getMessage());
     }
 
+    String username = null;
+    try {
+      username = extractUsername(attributes);
+    } catch (Exception e) {
+      log.error("Error parsing username: {}", e.getMessage());
+    }
+
     try {
       extractTotalTokens(attributes);
     } catch (Exception e) {
@@ -197,7 +215,8 @@ public class TraceDataMapper {
     }
     SpanInfo.SpanInfoBuilder spanInfoBuilder = SpanInfo.builder()
         .spanDataBody(spanDataBody)
-        .contentData(contentData);
+        .contentData(contentData)
+        .username(username);
     return spanInfoBuilder.build();
   }
 
@@ -269,6 +288,20 @@ public class TraceDataMapper {
       }
     } else {
       spanDataBodyBuilder.error(false);
+    }
+  }
+
+  private String extractUsername(Map<String, Object> attributes) {
+    var usernameFieldValeMapping = valueMappings.get("username");
+    if (usernameFieldValeMapping == null) {
+      log.info("No username message path provided");
+      return null;
+    }
+    var username = ParseUtil.getValueInAttrByPath(usernameFieldValeMapping, attributes);
+    if (username == null) {
+      return null;
+    } else {
+      return (String) username;
     }
   }
 
