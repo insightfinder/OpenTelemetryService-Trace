@@ -10,4 +10,5 @@ public class DataConfig {
 
   private Map<String, ValueMapping> attrMapping;
   private PromptExtractionConfig promptExtraction;
+  private UnsuccessResponseExtractionConfig unsuccessResponseExtraction;
 }

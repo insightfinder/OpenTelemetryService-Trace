@@ -64,6 +64,20 @@ public class ParseUtil {
     return null;
   }
 
+  public static boolean pathExistInAttr(String fieldPath, Map<String, Object> attrMap) {
+    if (fieldPath == null) {
+      return false;
+    }
+    var attrPrefix = "tags.";
+    var trimmedFieldPath = fieldPath.trim();
+    if (trimmedFieldPath.startsWith(attrPrefix)) {
+      var attrName = fieldPath.substring(attrPrefix.length());
+      return attrMap.containsKey(attrName);
+    } else {
+      return attrMap.containsKey(trimmedFieldPath);
+    }
+  }
+
   public static long fromMicroSecondToMillis(long microSecond) {
     return microSecond / 1000L;
   }

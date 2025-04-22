@@ -197,6 +197,12 @@ public class TraceDataMapper {
       log.error("Error parsing prompt: {}", e.getMessage());
     }
 
+    try {
+      extractUnsuccessfulResponseFlag(attributes);
+    } catch (Exception e) {
+      log.error("Error parsing unsuccessful_response: {}", e.getMessage());
+    }
+
     var references = rawSpanData.getJSONArray("references");
     if (!references.isEmpty()) {
       var reference = references.getJSONObject(0);
@@ -359,6 +365,32 @@ public class TraceDataMapper {
       }
     } else {
       return (String) inputPromptValue;
+    }
+  }
+
+  private void extractUnsuccessfulResponseFlag(Map<String, Object> attributes) {
+    var unsuccessResponseExtractionConfig = Config.getInstance()
+        .getUnsuccessResponseExtractionConfig();
+    var processPath = unsuccessResponseExtractionConfig.getProcessPath();
+    var processNames = unsuccessResponseExtractionConfig.getProcessNames();
+    var processValueMapping = new ValueMapping(List.of(processPath));
+    var process = (String) ParseUtil.getValueInAttrByPath(processValueMapping, attributes);
+    if (process == null || !processNames.contains(process)) {
+      return;
+    }
+    var config = unsuccessResponseExtractionConfig.getConfig();
+    if (config == null) {
+      return;
+    }
+    var pathConfig = config.get("output_prompt");
+    String path = pathConfig.getFieldPath();
+    if (ParseUtil.pathExistInAttr(path, attributes)) {
+      var responseValueMapping = new ValueMapping(List.of(path));
+      var responseValue = ParseUtil.getValueInAttrByPath(responseValueMapping, attributes);
+      if (responseValue instanceof String response) {
+        attributes.put("unsuccessful_response",
+            StringUtils.isNullOrEmpty(response) || response.equals("\"\""));
+      }
     }
   }
 }
