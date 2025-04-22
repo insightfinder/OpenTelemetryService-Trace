@@ -185,7 +185,7 @@ public class TraceDataMapper {
     }
 
     try {
-      extractTotalTokens(attributes);
+      extractTokens(attributes);
     } catch (Exception e) {
       log.error("Error parsing total_tokens: {}", e.getMessage());
     }
@@ -220,20 +220,22 @@ public class TraceDataMapper {
     return spanInfoBuilder.build();
   }
 
-  private void extractTotalTokens(Map<String, Object> attributes) {
+  private void extractTokens(Map<String, Object> attributes) {
     var promptTokenMapping = valueMappings.get("prompt_token");
     var responseTokenMapping = valueMappings.get("response_token");
     Integer totalTokens = null;
+    Integer promptTokens = null;
+    Integer responseTokens = null;
     if (promptTokenMapping != null) {
       var promptToken = ParseUtil.getValueInAttrByPath(promptTokenMapping, attributes);
       if (promptToken != null) {
         totalTokens = 0;
         if (promptToken instanceof String) {
-          var promptTokenNum = Integer.parseInt((String) promptToken);
-          totalTokens += promptTokenNum;
+          promptTokens = Integer.parseInt((String) promptToken);
         } else if (promptToken instanceof Integer) {
-          totalTokens += (Integer) promptToken;
+          promptTokens = (Integer) promptToken;
         }
+        totalTokens += promptTokens;
       }
     }
     if (responseTokenMapping != null) {
@@ -243,15 +245,21 @@ public class TraceDataMapper {
           totalTokens = 0;
         }
         if (responseToken instanceof String) {
-          var responseTokenNum = Integer.parseInt((String) responseToken);
-          totalTokens += responseTokenNum;
+          responseTokens = Integer.parseInt((String) responseToken);
         } else if (responseToken instanceof Integer) {
-          totalTokens += (Integer) responseToken;
+          responseTokens = (Integer) responseToken;
         }
+        totalTokens += responseTokens;
       }
     }
     if (totalTokens != null) {
       attributes.put("total_tokens", totalTokens);
+    }
+    if (promptTokens != null) {
+      attributes.put("prompt_tokens", promptTokens);
+    }
+    if (responseTokens != null) {
+      attributes.put("response_tokens", responseTokens);
     }
   }
 
