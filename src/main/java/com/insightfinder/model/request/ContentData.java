@@ -12,6 +12,7 @@ public class ContentData {
   private String traceId;
   private String username;
   private String instanceName;
+  private String entryOperation;
   private InputPrompt inputPrompt;
   private ResponseRecord responseRecord;
 

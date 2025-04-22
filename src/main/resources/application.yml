@@ -58,3 +58,11 @@ data:
       output_prompt:
         fieldPath: "tags.traceloop.entity.output"
         valuePath: "outputs"
+  unsuccessResponseExtraction:
+    processPath: "tags.iftracer.entity.name"
+    processNames:
+      - "generate_answer"
+      - "generate_answer_with_context"
+    config:
+      output_prompt:
+        fieldPath: "tags.iftracer.entity.output"

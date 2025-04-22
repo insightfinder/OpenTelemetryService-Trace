@@ -8,6 +8,7 @@ import com.insightfinder.config.model.GrpcConfig;
 import com.insightfinder.config.model.InsightFinderConfig;
 import com.insightfinder.config.model.JaegerConfig;
 import com.insightfinder.config.model.PromptExtractionConfig;
+import com.insightfinder.config.model.UnsuccessResponseExtractionConfig;
 import com.insightfinder.config.model.ValueMapping;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -56,6 +57,10 @@ public class Config {
 
   public PromptExtractionConfig getPromptExtraction() {
     return getData().getPromptExtraction();
+  }
+
+  public UnsuccessResponseExtractionConfig getUnsuccessResponseExtractionConfig() {
+    return getData().getUnsuccessResponseExtraction();
   }
 
   private AppConfig getAppConfig() {

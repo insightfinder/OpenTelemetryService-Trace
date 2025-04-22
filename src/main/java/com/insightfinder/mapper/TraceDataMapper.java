@@ -18,6 +18,7 @@ import com.insightfinder.model.request.SpanDataBody.SpanDataBodyBuilder;
 import com.insightfinder.model.request.TraceDataBody;
 import com.insightfinder.util.ParseUtil;
 import io.opentelemetry.api.internal.StringUtils;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,9 @@ public class TraceDataMapper {
       var rawTrace = rawData.getJSONObject(0);
       var rawSpans = rawTrace.getJSONArray("spans");
       Map<String, ContentData> promptPairs = new HashMap<>();
+      String entryOperation = rawSpans.stream()
+          .min(Comparator.comparing(o -> ((JSONObject) o).getLong("startTime")))
+          .map(o -> ((JSONObject) o).getString("operationName").trim()).orElse(null);
       String username = null;
       for (int i = 0; i < rawSpans.size(); i++) {
         var curSpan = rawSpans.getJSONObject(i);
@@ -113,6 +117,7 @@ public class TraceDataMapper {
           .forEach(promptPair -> {
             promptPair.setInstanceName(traceDataBody.getInstanceName());
             promptPair.setUsername(traceDataBody.getUsername());
+            promptPair.setEntryOperation(entryOperation);
           });
 
       return com.insightfinder.mapper.TraceInfo.builder()
@@ -195,6 +200,12 @@ public class TraceDataMapper {
       contentData = extractPromptPair(attributes);
     } catch (Exception e) {
       log.error("Error parsing prompt: {}", e.getMessage());
+    }
+
+    try {
+      extractUnsuccessfulResponseFlag(attributes);
+    } catch (Exception e) {
+      log.error("Error parsing unsuccessful_response: {}", e.getMessage());
     }
 
     var references = rawSpanData.getJSONArray("references");
@@ -359,6 +370,32 @@ public class TraceDataMapper {
       }
     } else {
       return (String) inputPromptValue;
+    }
+  }
+
+  private void extractUnsuccessfulResponseFlag(Map<String, Object> attributes) {
+    var unsuccessResponseExtractionConfig = Config.getInstance()
+        .getUnsuccessResponseExtractionConfig();
+    var processPath = unsuccessResponseExtractionConfig.getProcessPath();
+    var processNames = unsuccessResponseExtractionConfig.getProcessNames();
+    var processValueMapping = new ValueMapping(List.of(processPath));
+    var process = (String) ParseUtil.getValueInAttrByPath(processValueMapping, attributes);
+    if (process == null || !processNames.contains(process)) {
+      return;
+    }
+    var config = unsuccessResponseExtractionConfig.getConfig();
+    if (config == null) {
+      return;
+    }
+    var pathConfig = config.get("output_prompt");
+    String path = pathConfig.getFieldPath();
+    if (ParseUtil.pathExistInAttr(path, attributes)) {
+      var responseValueMapping = new ValueMapping(List.of(path));
+      var responseValue = ParseUtil.getValueInAttrByPath(responseValueMapping, attributes);
+      if (responseValue instanceof String response) {
+        attributes.put("unsuccessful_response",
+            StringUtils.isNullOrEmpty(response) || response.equals("\"\""));
+      }
     }
   }
 }
