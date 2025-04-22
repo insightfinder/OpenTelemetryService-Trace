@@ -18,6 +18,7 @@ import com.insightfinder.model.request.SpanDataBody.SpanDataBodyBuilder;
 import com.insightfinder.model.request.TraceDataBody;
 import com.insightfinder.util.ParseUtil;
 import io.opentelemetry.api.internal.StringUtils;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,9 @@ public class TraceDataMapper {
       var rawTrace = rawData.getJSONObject(0);
       var rawSpans = rawTrace.getJSONArray("spans");
       Map<String, ContentData> promptPairs = new HashMap<>();
+      String entryOperation = rawSpans.stream()
+          .min(Comparator.comparing(o -> ((JSONObject) o).getLong("startTime")))
+          .map(o -> ((JSONObject) o).getString("operationName").trim()).orElse(null);
       String username = null;
       for (int i = 0; i < rawSpans.size(); i++) {
         var curSpan = rawSpans.getJSONObject(i);
@@ -113,6 +117,7 @@ public class TraceDataMapper {
           .forEach(promptPair -> {
             promptPair.setInstanceName(traceDataBody.getInstanceName());
             promptPair.setUsername(traceDataBody.getUsername());
+            promptPair.setEntryOperation(entryOperation);
           });
 
       return com.insightfinder.mapper.TraceInfo.builder()
