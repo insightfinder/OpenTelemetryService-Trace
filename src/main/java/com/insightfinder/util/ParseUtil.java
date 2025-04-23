@@ -4,7 +4,11 @@ import com.alibaba.fastjson2.JSONArray;
 import com.google.protobuf.ByteString;
 import com.insightfinder.config.model.ValueMapping;
 import io.grpc.Metadata;
+import io.opentelemetry.proto.common.v1.KeyValue;
+import io.opentelemetry.proto.trace.v1.Span;
+
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ParseUtil {
@@ -81,4 +85,13 @@ public class ParseUtil {
   public static long fromMicroSecondToMillis(long microSecond) {
     return microSecond / 1000L;
   }
+
+  public static Map<String,String> parseAttrsMapFromAttributeList(List<KeyValue> attrList) {
+    var result = new HashMap<String,String>();
+    for (var attr: attrList){
+      result.put(attr.getKey(),attr.getValue().getStringValue());
+    }
+    return result;
+  }
 }
+

@@ -24,10 +24,10 @@ public class GrpcTraceService extends TraceServiceGrpc.TraceServiceImplBase {
   public void export(ExportTraceServiceRequest request,
       StreamObserver<ExportTraceServiceResponse> responseObserver) {
 
-    log.info("Received trace data from user {}.", METADATA_KEY.get().getUsername());
-
     // Extract trace data body and add data to the queue
     exportSpanData(request);
+
+    log.info("Received trace data from user {}.", METADATA_KEY.get().getUsername());
 
     // Send Trace to Jaeger
     jaegerService.saveTraceData(request);
@@ -45,9 +45,42 @@ public class GrpcTraceService extends TraceServiceGrpc.TraceServiceImplBase {
         for (Span rawSpan : scopeSpans.getSpansList()) {
           var traceID = ParseUtil.parseHexadecimalBytes(rawSpan.getTraceId());
 
-          uniqueDelayQueueManager.offerMessage(
-              new TraceInfo(traceID, metadata.getUsername(), metadata.getProjectName(),
-                  metadata.getSystemName(), metadata.getLicenseKey()));
+          // Try to get insightfinder settings from the header
+          var username = metadata.getUsername();
+          var projectName = metadata.getProjectName();
+          var systemName = metadata.getSystemName();
+          var licenseKey = metadata.getLicenseKey();
+
+          // Try to get insightfinder settings from the span attributes if any of then is missing in the header.
+          if (username == null || projectName == null || licenseKey == null) {
+            log.info("InsightFinder metadata is not provided. Trying to get them from the span attributes.");
+            var attrsMap = ParseUtil.parseAttrsMapFromAttributeList(rawSpan.getAttributesList());
+
+            if (username == null){
+              username = attrsMap.get("x-username");
+            }
+            if (projectName == null){
+              projectName = attrsMap.get("x-trace-project");
+            }
+
+            if (licenseKey == null){
+              licenseKey = attrsMap.get("x-licensekey");
+            }
+
+            if (systemName == null){
+              systemName = attrsMap.get("x-system-name") == null ? "" : attrsMap.get("x-system-name");
+            }
+
+          }
+
+          if (username != null && projectName != null && licenseKey != null) {
+            uniqueDelayQueueManager.offerMessage(
+                    new TraceInfo(traceID, username, projectName,
+                            systemName, licenseKey));
+            }
+          else {
+            log.error("InsightFinder settings are missing. Trace ID: {}", traceID);
+          }
         }
       }
     }

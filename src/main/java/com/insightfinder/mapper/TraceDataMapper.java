@@ -137,6 +137,10 @@ public class TraceDataMapper {
 
     var rawAttributes = rawSpanData.getJSONArray("tags");
     var attributes = ParseUtil.getAttrMapFromJsonArray(rawAttributes);
+
+    // Remove sensitive attributes
+    removeSensitiveAttributes(attributes);
+
     var spanDataBodyBuilder = SpanDataBody.builder()
         .spanID(rawSpanData.getString("spanID"))
         .traceID(rawSpanData.getString("traceID"))
@@ -372,6 +376,13 @@ public class TraceDataMapper {
       return (String) inputPromptValue;
     }
   }
+
+  private void removeSensitiveAttributes(Map<String, Object> attributes) {
+    attributes.remove("x-username");
+    attributes.remove("x-licensekey");
+    attributes.remove("x-trace-project");
+  }
+
 
   private void extractUnsuccessfulResponseFlag(Map<String, Object> attributes) {
     var unsuccessResponseExtractionConfig = Config.getInstance()
