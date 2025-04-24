@@ -1,0 +1,74 @@
+grpc:
+  port: 4316
+  maxInboundMessageSizeInKB: 16384
+
+insightFinder:
+  serverUrl: https://stg.insightfinder.com
+  serverUri: /api/v1/customprojectrawdata
+  checkAndCreateUri: /api/v1/check-and-add-custom-project
+  promptUri: /api/v1/prompt
+  promptProjectName:
+  promptSystemName:
+
+jaeger:
+  serverName: localhost
+  tlsEnabled: false
+  grpcPort: 4317
+  uiPort: 16686
+
+app:
+  traceWorkerNum: 5
+  traceDelayInMillis: 60000
+  enableTraceLog: true
+  enablePromptLog: true
+  tls:
+    enabled: false
+    # Path to full-chain certificate file (PEM)
+    certificateFile: ""
+    # Path to the private key file.
+    privateKeyFile: ""
+
+data:
+  attrMapping: # expect the field is in tags
+    prompt_response:
+      fieldPaths:
+        - "tags.recommendations prompt"
+        - "tags.chat.response"
+    prompt_token:
+      fieldPaths:
+        - "tags.prompt_token_usage"
+        - "tags.prompt_tokens"
+        - "tags.token_usage"
+    response_token:
+      fieldPaths:
+        - "tags.output_token_usage"
+        - "tags.completion_tokens"
+    error:
+      fieldPaths:
+        - "tags.error_messages"
+    username:
+      fieldPaths:
+        - "tags.username"
+        - "tags.x-username"
+  promptExtraction:
+    processPath: "otel.scope.name"
+    processNames:
+      - "RunnableSequence.workflow"
+      - "RunnableWithMessageHistory.workflow"
+      - "tracer_proxy.tracer"
+    promptConfig:
+      input_prompt:
+        fieldPath: "tags.chat.prompt"
+        valuePath: ""
+      output_prompt:
+        fieldPath: "tags.chat.response"
+        valuePath: ""
+  unsuccessResponseExtraction:
+    processPath: "tags.chat.response"
+    processNames:
+      - "generate_answer"
+      - "generate_answer_with_context"
+      - "chat"
+    config:
+      output_prompt:
+        fieldPath: "tags.chat.response"

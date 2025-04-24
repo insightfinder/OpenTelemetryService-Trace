@@ -29,36 +29,16 @@ public class GrpcServerInterceptor implements ServerInterceptor {
     String ifLicenseKey = ParseUtil.getLicenseKeyFromMedata(metadata);
 
     if (StringUtils.isNullOrEmpty(ifUser)) {
-      log.error("'ifuser' header of OpenTelemetry exporter is empty.");
-      Status status = Status.FAILED_PRECONDITION.withDescription(
-          "'ifuser' header of OpenTelemetry exporter is empty.");
-      serverCall.close(status, new Metadata());
-      return new ServerCall.Listener<>() {
-      };
+      log.warn("'ifuser' header of OpenTelemetry exporter is empty.");
     }
     if (StringUtils.isNullOrEmpty(ifProject)) {
-      log.error("'ifproject' header of OpenTelemetry exporter is empty.");
-      Status status = Status.FAILED_PRECONDITION.withDescription(
-          "'ifproject' header of OpenTelemetry exporter is empty.");
-      serverCall.close(status, new Metadata());
-      return new ServerCall.Listener<>() {
-      };
+      log.warn("'ifproject' header of OpenTelemetry exporter is empty.");
     }
     if (StringUtils.isNullOrEmpty(ifSystem)) {
-      log.error("'ifsystem' header of OpenTelemetry exporter is empty.");
-      Status status = Status.FAILED_PRECONDITION.withDescription(
-          "'ifsystem' header of OpenTelemetry exporter is empty.");
-      serverCall.close(status, new Metadata());
-      return new ServerCall.Listener<>() {
-      };
+      log.warn("'ifsystem' header of OpenTelemetry exporter is empty.");
     }
     if (StringUtils.isNullOrEmpty(ifLicenseKey)) {
-      log.error("'iflicenseKey' header of OpenTelemetry exporter is empty.");
-      Status status = Status.FAILED_PRECONDITION.withDescription(
-          "'iflicenseKey' header of OpenTelemetry exporter is empty.");
-      serverCall.close(status, new Metadata());
-      return new ServerCall.Listener<>() {
-      };
+      log.warn("'iflicenseKey' header of OpenTelemetry exporter is empty.");
     }
     Context context = Context.current()
         .withValue(METADATA_KEY, new ContextMetadata(ifUser, ifProject, ifSystem, ifLicenseKey));

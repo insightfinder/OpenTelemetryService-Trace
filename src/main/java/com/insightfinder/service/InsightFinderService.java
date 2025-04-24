@@ -61,7 +61,7 @@ public class InsightFinderService {
 
   public boolean isProjectCreated(String projectName, String systemName, String user,
       String licenseKey, DataType dataType, ProjectCloudType projectCloudType) {
-    if (StringUtils.isNullOrEmpty(projectName) || StringUtils.isNullOrEmpty(systemName)
+    if (StringUtils.isNullOrEmpty(projectName)
         || StringUtils.isNullOrEmpty(user) || StringUtils.isNullOrEmpty(licenseKey)) {
       log.warn("Invalid project creation params: projectName={}, systemName={}, user={}, "
           + "licenseKey={}", projectName, systemName, user, licenseKey);
