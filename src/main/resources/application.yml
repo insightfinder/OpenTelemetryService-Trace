@@ -6,12 +6,12 @@ insightFinder:
   serverUrl: https://stg.insightfinder.com
   serverUri: /api/v1/customprojectrawdata
   checkAndCreateUri: /api/v1/check-and-add-custom-project
-  promptUri: /api/v1/prompt
-  promptProjectName: promptTest
-  promptSystemName: TraceAgentTest
+  promptUri: /api/v1/customprojectrawdata
+  promptProjectName:
+  promptSystemName:
 
 jaeger:
-  serverName: 18.212.200.99
+  serverName: localhost
   tlsEnabled: false
   grpcPort: 4317
   uiPort: 16686

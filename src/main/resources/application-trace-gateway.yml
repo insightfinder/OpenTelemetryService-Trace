@@ -6,7 +6,7 @@ insightFinder:
   serverUrl: https://stg.insightfinder.com
   serverUri: /api/v1/customprojectrawdata
   checkAndCreateUri: /api/v1/check-and-add-custom-project
-  promptUri: /api/v1/prompt
+  promptUri: /api/v1/customprojectrawdata
   promptProjectName:
   promptSystemName:
 
@@ -18,7 +18,7 @@ jaeger:
 
 app:
   traceWorkerNum: 5
-  traceDelayInMillis: 60000
+  traceDelayInMillis: 10000
   enableTraceLog: true
   enablePromptLog: true
   tls:
@@ -32,30 +32,24 @@ data:
   attrMapping: # expect the field is in tags
     prompt_response:
       fieldPaths:
-        - "tags.recommendations prompt"
         - "tags.chat.response"
     prompt_token:
       fieldPaths:
-        - "tags.prompt_token_usage"
-        - "tags.prompt_tokens"
-        - "tags.token_usage"
+        - "tags.chat.prompt_tokens"
     response_token:
       fieldPaths:
-        - "tags.output_token_usage"
-        - "tags.completion_tokens"
+        - "tags.chat.completion_tokens"
     error:
       fieldPaths:
-        - "tags.error_messages"
+        - "tags.error"
     username:
       fieldPaths:
         - "tags.username"
         - "tags.x-username"
   promptExtraction:
-    processPath: "otel.scope.name"
+    processPath: "span.kind"
     processNames:
-      - "RunnableSequence.workflow"
-      - "RunnableWithMessageHistory.workflow"
-      - "tracer_proxy.tracer"
+      - "internal"
     promptConfig:
       input_prompt:
         fieldPath: "tags.chat.prompt"
@@ -66,8 +60,6 @@ data:
   unsuccessResponseExtraction:
     processPath: "tags.chat.response"
     processNames:
-      - "generate_answer"
-      - "generate_answer_with_context"
       - "chat"
     config:
       output_prompt:
