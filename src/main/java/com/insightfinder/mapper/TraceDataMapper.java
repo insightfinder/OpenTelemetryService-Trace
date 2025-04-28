@@ -45,6 +45,7 @@ public class TraceDataMapper {
       TraceInfo traceInfo) {
     try {
       if (rawJaegerData == null || rawJaegerData.isEmpty()) {
+        log.info("Empty Jaeger raw data. Unable to extract prompt / response data.");
         return null;
       }
       var traceDataBody = new TraceDataBody();
@@ -335,6 +336,7 @@ public class TraceDataMapper {
     var processValueMapping = new ValueMapping(List.of(processPath));
     var process = (String) ParseUtil.getValueInAttrByPath(processValueMapping, attributes);
     if (process == null || !processNames.contains(process)) {
+      log.warn("Process mapping failed for process.");
       return null;
     }
     var inputPromptMapping = promptExtractionConfig.getPromptConfig().get("input_prompt");

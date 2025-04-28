@@ -68,6 +68,7 @@ public class InsightFinderService {
       return false;
     }
     if (isProjectExisted(projectName)) {
+      log.info("Project '{}' already existed for user '{}'", projectName, user);
       return true;
     }
     boolean hasProject = createProjectIfNotExist(projectName, systemName, user, licenseKey,
@@ -234,7 +235,7 @@ public class InsightFinderService {
 
     try (Response response = httpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
-        log.error("Error sending prompt data with response: {}", response.message());
+        log.error("Error sending prompt data with status {} with response: {}", response.code() ,response.message());
       } else {
         log.info("Sent prompt '{}' to project '{}' for user '{}'.",
             traceInfo.getTraceId(), traceInfo.getIfProject(), traceInfo.getIfUser());

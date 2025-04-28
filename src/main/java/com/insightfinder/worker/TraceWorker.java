@@ -74,6 +74,8 @@ public class TraceWorker implements Runnable {
         var promptResponsePairs = parsedTraceInfo.getPromptResponsePairs();
         if (promptResponsePairs != null && !promptResponsePairs.isEmpty()) {
           insightFinderService.sendPromptData(promptResponsePairs, promptInfo);
+        }else{
+          log.warn("Empty prompt prompt / response pairs for trace {}.", traceInfo.getTraceId());
         }
       }
     }
