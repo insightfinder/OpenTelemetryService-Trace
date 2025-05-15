@@ -29,6 +29,7 @@ app:
     privateKeyFile: ""
 
 data:
+  useCustomTokenizer: true
   attrMapping: # expect the field is in tags
     prompt_response:
       fieldPaths:

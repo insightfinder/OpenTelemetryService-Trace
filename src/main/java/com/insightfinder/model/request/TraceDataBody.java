@@ -44,7 +44,7 @@ public class TraceDataBody {
   public void addSpan(SpanDataBody span) {
     var spanTotalTokens = span.getTotalTokens();
     if (spanTotalTokens != null) {
-      totalToken += span.getTotalTokens();
+      totalToken += spanTotalTokens;
     }
     var parentSpanId = span.getParentSpanId();
     if (StringUtils.isNullOrEmpty(parentSpanId)) {

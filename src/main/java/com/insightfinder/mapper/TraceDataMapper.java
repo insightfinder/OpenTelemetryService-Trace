@@ -17,6 +17,7 @@ import com.insightfinder.model.request.SpanDataBody;
 import com.insightfinder.model.request.SpanDataBody.SpanDataBodyBuilder;
 import com.insightfinder.model.request.TraceDataBody;
 import com.insightfinder.util.ParseUtil;
+import com.insightfinder.util.TokenizerUtil;
 import io.opentelemetry.api.internal.StringUtils;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ public class TraceDataMapper {
   private static TraceDataMapper instance;
   private static final Map<String, ValueMapping> valueMappings = Config.getInstance()
       .getAttrMapping();
+  private static final Config config = Config.getInstance();
   private static final String LLM_JUDGE_URI = "/llm-as-judge/";
 
   private TraceDataMapper() {
@@ -199,7 +201,9 @@ public class TraceDataMapper {
     }
 
     try {
-      extractTokens(attributes);
+      if (!config.useCustomTokenizer()) {
+        extractTokens(attributes);
+      }
     } catch (Exception e) {
       log.error("Error parsing total_tokens: {}", e.getMessage());
     }
@@ -348,6 +352,14 @@ public class TraceDataMapper {
     var inputPrompt = extractPrompt(inputPromptMapping, attributes);
     var outputPrompt = extractPrompt(outputPromptMapping, attributes);
     if (!StringUtils.isNullOrEmpty(inputPrompt) && !StringUtils.isNullOrEmpty(outputPrompt)) {
+      if (config.useCustomTokenizer()) {
+        int promptTokens = TokenizerUtil.splitByWhiteSpaceTokenizer(inputPrompt);
+        int responseTokens = TokenizerUtil.splitByWhiteSpaceTokenizer(outputPrompt);
+        int totalTokens = promptTokens + responseTokens;
+        attributes.put("total_tokens", totalTokens);
+        attributes.put("prompt_tokens", promptTokens);
+        attributes.put("response_tokens", responseTokens);
+      }
       return ContentData.builder()
           .inputPrompt(new InputPrompt(inputPrompt))
           .responseRecord(new ResponseRecord(outputPrompt))
