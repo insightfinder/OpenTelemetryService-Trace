@@ -30,6 +30,7 @@ public class TraceDataMapper {
   private static TraceDataMapper instance;
   private static final Map<String, ValueMapping> valueMappings = Config.getInstance()
       .getAttrMapping();
+  private static final String LLM_JUDGE_URI = "/llm-as-judge/";
 
   private TraceDataMapper() {
   }
@@ -59,6 +60,9 @@ public class TraceDataMapper {
       String entryOperation = rawSpans.stream()
           .min(Comparator.comparing(o -> ((JSONObject) o).getLong("startTime")))
           .map(o -> ((JSONObject) o).getString("operationName").trim()).orElse(null);
+      if (!StringUtils.isNullOrEmpty(entryOperation) && entryOperation.contains(LLM_JUDGE_URI)) {
+        return null;
+      }
       String username = null;
       for (int i = 0; i < rawSpans.size(); i++) {
         var curSpan = rawSpans.getJSONObject(i);
@@ -122,8 +126,8 @@ public class TraceDataMapper {
           });
 
       return com.insightfinder.mapper.TraceInfo.builder()
-          .traceDataBody(traceDataBody)
           .promptResponsePairs(promptPairs.values().stream().toList())
+          .traceDataBody(traceDataBody)
           .build();
     } catch (Exception e) {
       log.error("Error mapping Jaeger raw data to IF trace: {}", e.getMessage());
