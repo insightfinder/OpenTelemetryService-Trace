@@ -40,6 +40,7 @@ public class SpanDataBody {
   @JSONField(name = "spanID")
   private String spanID;
 
+
   public void addChildSpans(Set<SpanDataBody> childSpans) {
     childSpans.forEach(childSpan -> {
       var childSpanId = childSpan.getSpanID();
