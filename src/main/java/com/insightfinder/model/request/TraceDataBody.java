@@ -56,21 +56,24 @@ public class TraceDataBody {
     }
   }
 
-  public void composeSpanRelations() {
+  public void composeSpanRelations(String overwriteTraceId) {
     for (SpanDataBody rootSpan : spans.values()) {
-      buildSpanRelation(rootSpan);
+      buildSpanRelation(rootSpan, overwriteTraceId);
     }
   }
 
-  private void buildSpanRelation(SpanDataBody rootSpan) {
+  private void buildSpanRelation(SpanDataBody rootSpan, String overwriteTraceId) {
     if (rootSpan == null || rootSpan.getSpanID() == null) {
       return;
+    }
+    if (!StringUtils.isNullOrEmpty(overwriteTraceId)) {
+      rootSpan.setTraceID(overwriteTraceId);
     }
     var childSpans = this.childSpans.get(rootSpan.getSpanID());
     if (childSpans != null) {
       rootSpan.addChildSpans(childSpans);
       for (SpanDataBody childSpan : childSpans) {
-        buildSpanRelation(childSpan);
+        buildSpanRelation(childSpan, overwriteTraceId);
       }
     }
   }

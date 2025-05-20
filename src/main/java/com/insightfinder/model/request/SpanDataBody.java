@@ -12,7 +12,7 @@ import lombok.Data;
 public class SpanDataBody {
 
   @JSONField(name = "traceID")
-  private final String traceID;
+  private String traceID;
 
   @JSONField(name = "spanID")
   private final String spanID;

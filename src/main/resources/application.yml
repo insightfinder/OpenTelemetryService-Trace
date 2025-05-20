@@ -30,6 +30,10 @@ app:
 
 data:
   useCustomTokenizer: true
+  overwriteTraceAndSpanIdByUUID: true
+  overwriteUUIDPath: "tags.chat.id"
+  overwriteTimestamp: true
+  overwriteTimestampPath: "tags.chat.timestamp"
   attrMapping: # expect the field is in tags
     prompt_response:
       fieldPaths:

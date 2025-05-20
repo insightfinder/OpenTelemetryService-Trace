@@ -21,7 +21,6 @@ import com.insightfinder.util.TokenizerUtil;
 import io.opentelemetry.api.internal.StringUtils;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,6 +65,7 @@ public class TraceDataMapper {
         return null;
       }
       String username = null;
+      String overwriteTraceId = null;
       for (int i = 0; i < rawSpans.size(); i++) {
         var curSpan = rawSpans.getJSONObject(i);
 
@@ -84,6 +84,9 @@ public class TraceDataMapper {
         SpanInfo spanInfo = getSpanDataBody(curSpan);
         if (spanInfo != null) {
           var spanDataBody = spanInfo.getSpanDataBody();
+          if (!StringUtils.isNullOrEmpty(spanInfo.getOverwriteTraceId())) {
+            overwriteTraceId = spanInfo.getOverwriteTraceId();
+          }
           if (spanDataBody != null) {
             traceDataBody.addSpan(spanDataBody);
             String spanUsername = spanInfo.getUsername();
@@ -118,7 +121,7 @@ public class TraceDataMapper {
       traceDataBody.setTraceID(traceInfo.getTraceId());
       traceDataBody.setUsername(username);
 
-      traceDataBody.composeSpanRelations();
+      traceDataBody.composeSpanRelations(overwriteTraceId);
 
       promptPairs.values()
           .forEach(promptPair -> {
@@ -221,6 +224,31 @@ public class TraceDataMapper {
       log.error("Error parsing unsuccessful_response: {}", e.getMessage());
     }
 
+    try {
+      if (config.overwriteTimestamp()) {
+        Long overwriteTimestamp = getOverwriteTimestamp(attributes);
+        if (overwriteTimestamp != null) {
+          spanDataBodyBuilder.startTime(overwriteTimestamp);
+        }
+      }
+    } catch (Exception e) {
+      log.error("Error parsing overwrite_timestamp: {}", e.getMessage());
+    }
+
+    String overwriteTraceId = null;
+    try {
+      if (config.overwriteTraceAndSpanIdByUUID()) {
+        String uuid = getOverwriteTraceAndSpanId(attributes);
+        if (uuid != null) {
+          spanDataBodyBuilder.spanID(uuid);
+          spanDataBodyBuilder.traceID(uuid);
+          overwriteTraceId = uuid;
+        }
+      }
+    } catch (Exception e) {
+      log.error("Error parsing overwrite_traceId: {}", e.getMessage());
+    }
+
     var references = rawSpanData.getJSONArray("references");
     if (!references.isEmpty()) {
       var reference = references.getJSONObject(0);
@@ -239,6 +267,7 @@ public class TraceDataMapper {
     }
     SpanInfo.SpanInfoBuilder spanInfoBuilder = SpanInfo.builder()
         .spanDataBody(spanDataBody)
+        .overwriteTraceId(overwriteTraceId)
         .contentData(contentData)
         .username(username);
     return spanInfoBuilder.build();
@@ -341,8 +370,7 @@ public class TraceDataMapper {
     var promptExtractionConfig = Config.getInstance().getPromptExtraction();
     var processPath = promptExtractionConfig.getProcessPath();
     var processNames = promptExtractionConfig.getProcessNames();
-    var processValueMapping = new ValueMapping(List.of(processPath));
-    var process = (String) ParseUtil.getValueInAttrByPath(processValueMapping, attributes);
+    var process = (String) ParseUtil.getValueInAttrByPath(processPath, attributes);
     if (process == null || !processNames.contains(process)) {
       log.warn("Process mapping failed for process.");
       return null;
@@ -377,8 +405,7 @@ public class TraceDataMapper {
     if (StringUtils.isNullOrEmpty(promptPath)) {
       return null;
     }
-    var promptValueMapping = new ValueMapping(List.of(promptPath));
-    var inputPromptValue = ParseUtil.getValueInAttrByPath(promptValueMapping, attributes);
+    var inputPromptValue = ParseUtil.getValueInAttrByPath(promptPath, attributes);
     if (!(inputPromptValue instanceof String)) {
       return null;
     }
@@ -407,8 +434,7 @@ public class TraceDataMapper {
         .getUnsuccessResponseExtractionConfig();
     var processPath = unsuccessResponseExtractionConfig.getProcessPath();
     var processNames = unsuccessResponseExtractionConfig.getProcessNames();
-    var processValueMapping = new ValueMapping(List.of(processPath));
-    var process = (String) ParseUtil.getValueInAttrByPath(processValueMapping, attributes);
+    var process = (String) ParseUtil.getValueInAttrByPath(processPath, attributes);
     if (process == null || !processNames.contains(process)) {
       return;
     }
@@ -419,12 +445,35 @@ public class TraceDataMapper {
     var pathConfig = config.get("output_prompt");
     String path = pathConfig.getFieldPath();
     if (ParseUtil.pathExistInAttr(path, attributes)) {
-      var responseValueMapping = new ValueMapping(List.of(path));
-      var responseValue = ParseUtil.getValueInAttrByPath(responseValueMapping, attributes);
+      var responseValue = ParseUtil.getValueInAttrByPath(path, attributes);
       if (responseValue instanceof String response) {
         attributes.put("unsuccessful_response",
             StringUtils.isNullOrEmpty(response) || response.equals("\"\""));
       }
     }
+  }
+
+  private Long getOverwriteTimestamp(Map<String, Object> attributes) {
+    var overwriteTimestampPath = config.getOverwriteTimestampPath();
+    if (StringUtils.isNullOrEmpty(overwriteTimestampPath)) {
+      return null;
+    }
+    var timestamp = ParseUtil.getValueInAttrByPath(overwriteTimestampPath, attributes);
+    if (timestamp == null) {
+      return null;
+    }
+    return Long.parseLong((String) timestamp);
+  }
+
+  private String getOverwriteTraceAndSpanId(Map<String, Object> attributes) {
+    var overwriteUUIDPath = config.getOverwriteUUIDPath();
+    if (StringUtils.isNullOrEmpty(overwriteUUIDPath)) {
+      return null;
+    }
+    var uuid = ParseUtil.getValueInAttrByPath(overwriteUUIDPath, attributes);
+    if (uuid == null) {
+      return null;
+    }
+    return (String) uuid;
   }
 }

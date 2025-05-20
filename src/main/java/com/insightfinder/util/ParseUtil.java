@@ -5,8 +5,6 @@ import com.google.protobuf.ByteString;
 import com.insightfinder.config.model.ValueMapping;
 import io.grpc.Metadata;
 import io.opentelemetry.proto.common.v1.KeyValue;
-import io.opentelemetry.proto.trace.v1.Span;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +45,14 @@ public class ParseUtil {
     }
 
     return result;
+  }
+
+  public static Object getValueInAttrByPath(String path, Map<String, Object> attrMap) {
+    if (path == null) {
+      return null;
+    }
+    ValueMapping valueMapping = new ValueMapping(List.of(path));
+    return getValueInAttrByPath(valueMapping, attrMap);
   }
 
   public static Object getValueInAttrByPath(ValueMapping valueMapping,

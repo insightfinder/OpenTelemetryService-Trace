@@ -166,4 +166,20 @@ public class Config {
   public boolean useCustomTokenizer() {
     return getData().isUseCustomTokenizer();
   }
+
+  public boolean overwriteTraceAndSpanIdByUUID() {
+    return getData().isOverwriteTraceAndSpanIdByUUID();
+  }
+
+  public boolean overwriteTimestamp() {
+    return getData().isOverwriteTimestamp();
+  }
+
+  public String getOverwriteUUIDPath() {
+    return getData().getOverwriteUUIDPath();
+  }
+
+  public String getOverwriteTimestampPath() {
+    return getData().getOverwriteTimestampPath();
+  }
 }
