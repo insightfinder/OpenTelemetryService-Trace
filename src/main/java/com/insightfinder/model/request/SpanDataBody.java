@@ -15,7 +15,8 @@ public class SpanDataBody {
   @JSONField(name = "traceID")
   private String traceID;
 
-  private transient final String overwriteSpanId;
+  @JSONField(name = "spanID")
+  private String spanID;
 
   @JSONField(name = "operationName")
   private final String operationName;
@@ -37,8 +38,8 @@ public class SpanDataBody {
 
   @JSONField(name = "childSpans")
   private final Map<String, SpanDataBody> childSpans = new HashMap<>();
-  @JSONField(name = "spanID")
-  private String spanID;
+
+  private transient final String overwriteSpanId;
 
 
   public void addChildSpans(Set<SpanDataBody> childSpans) {
