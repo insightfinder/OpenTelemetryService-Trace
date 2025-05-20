@@ -162,4 +162,8 @@ public class Config {
   public String getAppCertificateFile() {
     return getTls().getCertificateFile();
   }
+
+  public boolean useCustomTokenizer() {
+    return getData().isUseCustomTokenizer();
+  }
 }
