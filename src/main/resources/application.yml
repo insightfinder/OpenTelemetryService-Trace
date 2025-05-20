@@ -33,7 +33,7 @@ data:
   overwriteTraceAndSpanIdByUUID: true
   overwriteUUIDPath: "tags.chat.id"
   overwriteTimestamp: true
-  overwriteTimestampPath: "tags.chat.timestamp"
+  overwriteTimestampPath: "tags.x-timestamp"
   attrMapping: # expect the field is in tags
     prompt_response:
       fieldPaths:
