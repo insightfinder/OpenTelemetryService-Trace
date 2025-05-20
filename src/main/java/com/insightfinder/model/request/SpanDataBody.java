@@ -1,6 +1,7 @@
 package com.insightfinder.model.request;
 
 import com.alibaba.fastjson2.annotation.JSONField;
+import io.opentelemetry.api.internal.StringUtils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -14,8 +15,7 @@ public class SpanDataBody {
   @JSONField(name = "traceID")
   private String traceID;
 
-  @JSONField(name = "spanID")
-  private final String spanID;
+  private transient final String overwriteSpanId;
 
   @JSONField(name = "operationName")
   private final String operationName;
@@ -37,10 +37,17 @@ public class SpanDataBody {
 
   @JSONField(name = "childSpans")
   private final Map<String, SpanDataBody> childSpans = new HashMap<>();
+  @JSONField(name = "spanID")
+  private String spanID;
 
   public void addChildSpans(Set<SpanDataBody> childSpans) {
     childSpans.forEach(childSpan -> {
       var childSpanId = childSpan.getSpanID();
+      String overwriteSpanId = childSpan.getOverwriteSpanId();
+      if (!StringUtils.isNullOrEmpty(overwriteSpanId)) {
+        childSpanId = overwriteSpanId;
+        childSpan.setSpanID(overwriteSpanId);
+      }
       this.childSpans.put(childSpanId, childSpan);
     });
   }

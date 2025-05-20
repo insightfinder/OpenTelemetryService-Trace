@@ -9,6 +9,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.insightfinder.config.Config;
 import com.insightfinder.config.model.PromptConfig;
 import com.insightfinder.config.model.ValueMapping;
+import com.insightfinder.model.SpanOverwrite;
 import com.insightfinder.model.message.TraceInfo;
 import com.insightfinder.model.request.ContentData;
 import com.insightfinder.model.request.InputPrompt;
@@ -66,6 +67,7 @@ public class TraceDataMapper {
       }
       String username = null;
       String overwriteTraceId = null;
+      SpanOverwrite spanOverwrite = null;
       for (int i = 0; i < rawSpans.size(); i++) {
         var curSpan = rawSpans.getJSONObject(i);
 
@@ -86,6 +88,10 @@ public class TraceDataMapper {
           var spanDataBody = spanInfo.getSpanDataBody();
           if (!StringUtils.isNullOrEmpty(spanInfo.getOverwriteTraceId())) {
             overwriteTraceId = spanInfo.getOverwriteTraceId();
+            spanOverwrite = SpanOverwrite.builder()
+                .originalSpanId(spanDataBody.getSpanID())
+                .overwriteSpanId(spanDataBody.getOverwriteSpanId())
+                .build();
           }
           if (spanDataBody != null) {
             traceDataBody.addSpan(spanDataBody);
@@ -97,7 +103,6 @@ public class TraceDataMapper {
             }
             var promptPair = spanInfo.getContentData();
             if (promptPair != null && !promptPair.isEmpty()) {
-              promptPair.setTraceId(traceInfo.getTraceId());
               var key = promptPair.getPromptHash();
               if (key != null) {
                 if (promptPairs.containsKey(key)) {
@@ -115,20 +120,23 @@ public class TraceDataMapper {
           }
         }
       }
+      String traceId =
+          StringUtils.isNullOrEmpty(overwriteTraceId) ? traceInfo.getTraceId() : overwriteTraceId;
       var processes = rawTrace.getJSONObject("processes");
       traceDataBody.setProcesses(processes);
       traceDataBody.setInstanceName(processes.getJSONObject("p1").getString("serviceName"));
-      traceDataBody.setTraceID(traceInfo.getTraceId());
+      traceDataBody.setTraceID(traceId);
       traceDataBody.setUsername(username);
 
-      traceDataBody.composeSpanRelations(overwriteTraceId);
+      traceDataBody.composeSpanRelations(spanOverwrite);
 
-      promptPairs.values()
-          .forEach(promptPair -> {
-            promptPair.setInstanceName(traceDataBody.getInstanceName());
-            promptPair.setUsername(traceDataBody.getUsername());
-            promptPair.setEntryOperation(entryOperation);
-          });
+      for (ContentData promptContentData : promptPairs.values()) {
+        promptContentData.overWriteSpanId(spanOverwrite);
+        promptContentData.setTraceId(traceId);
+        promptContentData.setInstanceName(traceDataBody.getInstanceName());
+        promptContentData.setUsername(traceDataBody.getUsername());
+        promptContentData.setEntryOperation(entryOperation);
+      }
 
       return com.insightfinder.mapper.TraceInfo.builder()
           .promptResponsePairs(promptPairs.values().stream().toList())
@@ -240,9 +248,8 @@ public class TraceDataMapper {
       if (config.overwriteTraceAndSpanIdByUUID()) {
         String uuid = getOverwriteTraceAndSpanId(attributes);
         if (uuid != null) {
-          spanDataBodyBuilder.spanID(uuid);
-          spanDataBodyBuilder.traceID(uuid);
           overwriteTraceId = uuid;
+          spanDataBodyBuilder.overwriteSpanId(uuid);
         }
       }
     } catch (Exception e) {
@@ -462,7 +469,7 @@ public class TraceDataMapper {
     if (timestamp == null) {
       return null;
     }
-    return Long.parseLong((String) timestamp);
+    return Long.parseLong(timestamp.toString());
   }
 
   private String getOverwriteTraceAndSpanId(Map<String, Object> attributes) {

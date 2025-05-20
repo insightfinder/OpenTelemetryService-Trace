@@ -2,6 +2,7 @@ package com.insightfinder.model.request;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.annotation.JSONField;
+import com.insightfinder.model.SpanOverwrite;
 import io.opentelemetry.api.internal.StringUtils;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -56,9 +57,28 @@ public class TraceDataBody {
     }
   }
 
-  public void composeSpanRelations(String overwriteTraceId) {
+  public void composeSpanRelations(SpanOverwrite spanOverwrite) {
+    String overwriteTraceId = null;
+    if (spanOverwrite != null && spanOverwrite.needsOverwrite()) {
+      overwriteSpanId(spanOverwrite);
+      overwriteTraceId = spanOverwrite.getOverwriteSpanId();
+    }
     for (SpanDataBody rootSpan : spans.values()) {
       buildSpanRelation(rootSpan, overwriteTraceId);
+    }
+  }
+
+  private void overwriteSpanId(SpanOverwrite spanOverwrite) {
+    String originalSpanId = spanOverwrite.getOriginalSpanId();
+    String overwriteSpanId = spanOverwrite.getOverwriteSpanId();
+    SpanDataBody span = spans.remove(originalSpanId);
+    if (span != null) {
+      span.setSpanID(overwriteSpanId);
+      spans.put(overwriteSpanId, span);
+    }
+    Set<SpanDataBody> childSpans = this.childSpans.remove(originalSpanId);
+    if (childSpans != null) {
+      this.childSpans.put(overwriteSpanId, childSpans);
     }
   }
 
@@ -68,6 +88,9 @@ public class TraceDataBody {
     }
     if (!StringUtils.isNullOrEmpty(overwriteTraceId)) {
       rootSpan.setTraceID(overwriteTraceId);
+    }
+    if (!StringUtils.isNullOrEmpty(rootSpan.getOverwriteSpanId())) {
+      rootSpan.setSpanID(rootSpan.getOverwriteSpanId());
     }
     var childSpans = this.childSpans.get(rootSpan.getSpanID());
     if (childSpans != null) {
