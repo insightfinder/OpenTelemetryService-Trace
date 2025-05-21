@@ -29,6 +29,11 @@ app:
     privateKeyFile: ""
 
 data:
+  useCustomTokenizer: true
+  overwriteTraceAndSpanIdByUUID: true
+  overwriteUUIDPath: "tags.chat.id"
+  overwriteTimestamp: true
+  overwriteTimestampPath: "tags.x-timestamp"
   attrMapping: # expect the field is in tags
     prompt_response:
       fieldPaths:
@@ -46,6 +51,9 @@ data:
       fieldPaths:
         - "tags.username"
         - "tags.x-username"
+    session_id:
+      fieldPaths:
+        - "tags.x-session-id"
   promptExtraction:
     processPath: "span.kind"
     processNames:

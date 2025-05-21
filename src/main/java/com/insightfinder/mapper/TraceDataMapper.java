@@ -211,6 +211,13 @@ public class TraceDataMapper {
       log.error("Error parsing username: {}", e.getMessage());
     }
 
+    String sessionId = null;
+    try {
+      sessionId = extractSessionId(attributes);
+    } catch (Exception e) {
+      log.error("Error parsing sessionId: {}", e.getMessage());
+    }
+
     try {
       if (!config.useCustomTokenizer()) {
         extractTokens(attributes);
@@ -271,6 +278,7 @@ public class TraceDataMapper {
       contentData.setSpanId(spanDataBody.getSpanID());
       contentData.setDuration(spanDataBody.getDuration());
       contentData.setStartTime(spanDataBody.getStartTime());
+      contentData.setSessionId(sessionId);
     }
     SpanInfo.SpanInfoBuilder spanInfoBuilder = SpanInfo.builder()
         .spanDataBody(spanDataBody)
@@ -370,6 +378,20 @@ public class TraceDataMapper {
       return null;
     } else {
       return (String) username;
+    }
+  }
+
+  private String extractSessionId(Map<String, Object> attributes) {
+    var sessionIdValueMapping = valueMappings.get("session_id");
+    if (sessionIdValueMapping == null) {
+      log.info("No sessionId message path provided");
+      return null;
+    }
+    var sessionId = ParseUtil.getValueInAttrByPath(sessionIdValueMapping, attributes);
+    if (sessionId == null) {
+      return null;
+    } else {
+      return (String) sessionId;
     }
   }
 
