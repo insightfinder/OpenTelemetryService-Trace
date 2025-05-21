@@ -9,6 +9,10 @@ import lombok.NoArgsConstructor;
 public class DataConfig {
 
   private boolean useCustomTokenizer;
+  private boolean overwriteTraceAndSpanIdByUUID;
+  private boolean overwriteTimestamp;
+  private String overwriteUUIDPath;
+  private String overwriteTimestampPath;
   private Map<String, ValueMapping> attrMapping;
   private PromptExtractionConfig promptExtraction;
   private UnsuccessResponseExtractionConfig unsuccessResponseExtraction;

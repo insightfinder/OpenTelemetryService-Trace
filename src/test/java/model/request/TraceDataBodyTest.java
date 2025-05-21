@@ -57,7 +57,7 @@ public class TraceDataBodyTest {
     trace.addSpan(root1);
     trace.addSpan(root2);
 
-    trace.composeSpanRelations();
+    trace.composeSpanRelations(null);
 
     Map<String, SpanDataBody> expectedSpan = new HashMap<>();
     expectedSpan.put("r1", root1);
@@ -100,7 +100,7 @@ public class TraceDataBodyTest {
     trace.addSpan(childSpan8);
     trace.addSpan(childSpan9);
 
-    trace.composeSpanRelations();
+    trace.composeSpanRelations(null);
 
     Map<String, SpanDataBody> expectedSpan = new HashMap<>();
     SpanDataBody expectedRoot = getExampleSpan("r1", null, "parent1");

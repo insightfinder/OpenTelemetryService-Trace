@@ -1,5 +1,6 @@
 package com.insightfinder.model.request;
 
+import com.insightfinder.model.SpanOverwrite;
 import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Data;
@@ -69,6 +70,20 @@ public class ContentData {
   private void setOutputPromptSpanId(String spanId) {
     if (responseRecord != null && !responseRecord.isEmpty()) {
       responseRecord.setSpanId(spanId);
+    }
+  }
+
+  public void overWriteSpanId(SpanOverwrite spanOverwrite) {
+    if (spanOverwrite == null || !spanOverwrite.needsOverwrite()) {
+      return;
+    }
+    String originalSpanId = spanOverwrite.getOriginalSpanId();
+    String overwriteSpanId = spanOverwrite.getOverwriteSpanId();
+    if (!inputPrompt.isEmpty() && inputPrompt.getSpanId().equals(originalSpanId)) {
+      inputPrompt.setSpanId(overwriteSpanId);
+    }
+    if (!responseRecord.isEmpty() && responseRecord.getSpanId().equals(originalSpanId)) {
+      responseRecord.setSpanId(overwriteSpanId);
     }
   }
 
