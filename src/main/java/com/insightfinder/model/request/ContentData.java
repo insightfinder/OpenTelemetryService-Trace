@@ -16,6 +16,7 @@ public class ContentData {
   private String entryOperation;
   private InputPrompt inputPrompt;
   private ResponseRecord responseRecord;
+  private String sessionId;
 
   public boolean isEmpty() {
     return (inputPrompt == null || inputPrompt.isEmpty()) && (responseRecord == null

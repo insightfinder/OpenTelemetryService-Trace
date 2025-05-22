@@ -51,6 +51,9 @@ data:
     username:
       fieldPaths:
         - "tags.username"
+    session_id:
+      fieldPaths:
+        - "tags.x-session-id"
   promptExtraction:
     processPath: "traceloop.entity.name"
     processNames:

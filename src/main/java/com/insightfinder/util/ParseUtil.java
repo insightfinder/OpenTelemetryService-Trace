@@ -62,16 +62,17 @@ public class ParseUtil {
       return null;
     }
     var attrPrefix = "tags.";
+    Object value = null;
     for (var fieldPath : fieldPaths) {
       var trimmedFieldPath = fieldPath.trim();
       if (trimmedFieldPath.startsWith(attrPrefix)) {
         var attrName = fieldPath.substring(attrPrefix.length());
-        return attrMap.get(attrName);
+        value = attrMap.get(attrName);
       } else {
-        return attrMap.get(trimmedFieldPath);
+        value = attrMap.get(trimmedFieldPath);
       }
     }
-    return null;
+    return value;
   }
 
   public static boolean pathExistInAttr(String fieldPath, Map<String, Object> attrMap) {
