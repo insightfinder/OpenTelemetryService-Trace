@@ -452,7 +452,6 @@ public class TraceDataMapper {
   }
 
   private void removeSensitiveAttributes(Map<String, Object> attributes) {
-    attributes.remove("x-username");
     attributes.remove("x-licensekey");
     attributes.remove("x-trace-project");
   }
