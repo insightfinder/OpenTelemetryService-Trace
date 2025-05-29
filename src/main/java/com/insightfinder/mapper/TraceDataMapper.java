@@ -89,7 +89,6 @@ public class TraceDataMapper {
           var spanDataBody = spanInfo.getSpanDataBody();
           if (!StringUtils.isNullOrEmpty(spanInfo.getOverwriteTraceId())) {
             overwriteTraceId = spanInfo.getOverwriteTraceId();
-            sessionId = spanInfo.getSessionId();
             spanOverwrite = SpanOverwrite.builder()
                 .originalSpanId(spanDataBody.getSpanID())
                 .overwriteSpanId(spanDataBody.getOverwriteSpanId())
@@ -102,6 +101,9 @@ public class TraceDataMapper {
               if (StringUtils.isNullOrEmpty(username)) {
                 username = spanUsername;
               }
+            }
+            if (StringUtils.isNullOrEmpty(sessionId)) {
+              sessionId = spanInfo.getSessionId();
             }
             var promptPair = spanInfo.getContentData();
             if (promptPair != null && !promptPair.isEmpty()) {
