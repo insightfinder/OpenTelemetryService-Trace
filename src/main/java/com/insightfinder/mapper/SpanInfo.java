@@ -13,4 +13,5 @@ public class SpanInfo {
   private final ContentData contentData;
   private final String username;
   private final String overwriteTraceId;
+  private final String sessionId;
 }
