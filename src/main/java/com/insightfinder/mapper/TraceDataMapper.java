@@ -68,6 +68,7 @@ public class TraceDataMapper {
       String username = null;
       String overwriteTraceId = null;
       SpanOverwrite spanOverwrite = null;
+      String sessionId = null;
       for (int i = 0; i < rawSpans.size(); i++) {
         var curSpan = rawSpans.getJSONObject(i);
 
@@ -100,6 +101,9 @@ public class TraceDataMapper {
               if (StringUtils.isNullOrEmpty(username)) {
                 username = spanUsername;
               }
+            }
+            if (StringUtils.isNullOrEmpty(sessionId)) {
+              sessionId = spanInfo.getSessionId();
             }
             var promptPair = spanInfo.getContentData();
             if (promptPair != null && !promptPair.isEmpty()) {
@@ -136,6 +140,7 @@ public class TraceDataMapper {
         promptContentData.setInstanceName(traceDataBody.getInstanceName());
         promptContentData.setUsername(traceDataBody.getUsername());
         promptContentData.setEntryOperation(entryOperation);
+        promptContentData.setSessionId(sessionId);
       }
 
       return com.insightfinder.mapper.TraceInfo.builder()
@@ -284,6 +289,7 @@ public class TraceDataMapper {
         .spanDataBody(spanDataBody)
         .overwriteTraceId(overwriteTraceId)
         .contentData(contentData)
+        .sessionId(sessionId)
         .username(username);
     return spanInfoBuilder.build();
   }
