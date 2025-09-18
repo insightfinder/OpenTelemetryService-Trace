@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.google.protobuf.ByteString;
 import com.insightfinder.config.model.ValueMapping;
 import io.grpc.Metadata;
+import io.opentelemetry.api.internal.StringUtils;
 import io.opentelemetry.proto.common.v1.KeyValue;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +25,11 @@ public class ParseUtil {
   }
 
   public static String getLicenseKeyFromMedata(Metadata metadata) {
-    return metadata.get(Metadata.Key.of("iflicenseKey", Metadata.ASCII_STRING_MARSHALLER));
+      var result = metadata.get(Metadata.Key.of("iflicenseKey", Metadata.ASCII_STRING_MARSHALLER));
+      if(StringUtils.isNullOrEmpty(result)){
+          result = metadata.get(Metadata.Key.of("iflicensekey", Metadata.ASCII_STRING_MARSHALLER));
+      }
+    return result;
   }
 
   public static String getProjectFromMedata(Metadata metadata) {
