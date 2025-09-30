@@ -423,9 +423,13 @@ public class TraceDataMapper {
         attributes.put("prompt_tokens", promptTokens);
         attributes.put("response_tokens", responseTokens);
       }
+      int promptTokens = (Integer) attributes.getOrDefault("prompt_tokens",
+          TokenizerUtil.splitByWhiteSpaceTokenizer(inputPrompt));
+      int responseTokens = (Integer) attributes.getOrDefault("response_tokens",
+          TokenizerUtil.splitByWhiteSpaceTokenizer(outputPrompt));
       return ContentData.builder()
-          .inputPrompt(new InputPrompt(inputPrompt))
-          .responseRecord(new ResponseRecord(outputPrompt))
+          .inputPrompt(new InputPrompt(inputPrompt, promptTokens))
+          .responseRecord(new ResponseRecord(outputPrompt, responseTokens))
           .build();
     } else {
       return null;

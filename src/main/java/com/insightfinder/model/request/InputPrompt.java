@@ -9,8 +9,9 @@ public class InputPrompt extends Content {
 
   private String prompt;
 
-  public InputPrompt(String content) {
+  public InputPrompt(String content, int tokenCount) {
     setContent(content);
+    setTokenCount(tokenCount);
   }
 
   @Override

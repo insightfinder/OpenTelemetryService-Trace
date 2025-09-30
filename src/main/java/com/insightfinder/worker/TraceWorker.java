@@ -68,10 +68,10 @@ public class TraceWorker implements Runnable {
       var parsedTraceInfo = traceDataMapper.fromRawJaegerData(rawJaegerData, traceInfo);
       if (parsedTraceInfo != null) {
         var traceDataBody = parsedTraceInfo.getTraceDataBody();
-        if (traceDataBody != null && !traceDataBody.isEmpty()) {
-          insightFinderService.sendTraceData(traceDataBody, traceInfo);
-        }
         var promptResponsePairs = parsedTraceInfo.getPromptResponsePairs();
+        if (traceDataBody != null && !traceDataBody.isEmpty()) {
+          insightFinderService.sendTraceData(traceDataBody, traceInfo, promptResponsePairs);
+        }
         if (promptResponsePairs != null && !promptResponsePairs.isEmpty()) {
           insightFinderService.sendPromptData(promptResponsePairs, promptInfo);
         }else{
