@@ -141,6 +141,7 @@ public class TraceDataMapper {
         promptContentData.setUsername(traceDataBody.getUsername());
         promptContentData.setEntryOperation(entryOperation);
         promptContentData.setSessionId(sessionId);
+        promptContentData.setTraceStartTimestamp(traceDataBody.getStartTime());
       }
 
       return com.insightfinder.mapper.TraceInfo.builder()
