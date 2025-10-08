@@ -163,13 +163,14 @@ public class InsightFinderService {
     }
   }
 
-  public void sendTraceData(TraceDataBody traceDataBody, TraceInfo traceInfo) {
+  public void sendTraceData(TraceDataBody traceDataBody, TraceInfo traceInfo,
+      List<ContentData> promptResponsePairs) {
     if (StringUtils.isNullOrEmpty(traceInfo.getIfProject())) {
       return;
     }
     var iFLogTraceData = new IFLogTraceDataPayload();
     var iFPayload = new IFLogTraceDataReceivePayload();
-
+    iFLogTraceData.setPromptData(promptResponsePairs);
     iFLogTraceData.setData(traceDataBody);
     iFLogTraceData.setTimeStamp(String.valueOf(traceDataBody.getStartTime()));
     var instanceName = traceDataBody.getInstanceName();

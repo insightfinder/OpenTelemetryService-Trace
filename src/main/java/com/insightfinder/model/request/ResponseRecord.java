@@ -9,8 +9,9 @@ public class ResponseRecord extends Content {
 
   private String response;
 
-  public ResponseRecord(String content) {
+  public ResponseRecord(String content, int tokenCount) {
     setContent(content);
+    setTokenCount(tokenCount);
   }
 
   @Override

@@ -17,6 +17,7 @@ public class ContentData {
   private InputPrompt inputPrompt;
   private ResponseRecord responseRecord;
   private String sessionId;
+  private long traceStartTimestamp;
 
   public boolean isEmpty() {
     return (inputPrompt == null || inputPrompt.isEmpty()) && (responseRecord == null

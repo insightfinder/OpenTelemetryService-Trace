@@ -9,6 +9,7 @@ public abstract class Content {
   private String spanId;
   private long startTime;
   private long duration;
+  private int tokenCount;
 
   public boolean isEmpty() {
     return StringUtils.isNullOrEmpty(getContent());
