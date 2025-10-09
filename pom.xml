@@ -82,7 +82,7 @@
     <dependency>
       <artifactId>netty-codec-http2</artifactId>
       <groupId>io.netty</groupId>
-      <version>4.2.4.Final</version>
+      <version>4.2.6.Final</version>
     </dependency>
 
     <dependency>
