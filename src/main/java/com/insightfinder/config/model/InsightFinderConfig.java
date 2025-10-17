@@ -15,4 +15,7 @@ public class InsightFinderConfig {
   private String promptUri;
   private String promptProjectName;
   private String promptSystemName;
+  private int connectTimeout;
+  private int readTimeout;
+  private int writeTimeout;
 }

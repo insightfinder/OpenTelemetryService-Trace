@@ -182,4 +182,17 @@ public class Config {
   public String getOverwriteTimestampPath() {
     return getData().getOverwriteTimestampPath();
   }
+
+  public int getIFConnectTimeout() { return getIFConfig().getConnectTimeout(); }
+
+  public int getIFReadTimeout() { return getIFConfig().getReadTimeout(); }
+
+  public int getIFWriteTimeout() { return getIFConfig().getWriteTimeout(); }
+
+  public int getJaegerConnectTimeout() { return getJaegerConfig().getConnectTimeout(); }
+
+  public int getJaegerReadTimeout() { return getJaegerConfig().getReadTimeout();}
+
+  public int getJaegerWriteTimeout() { return getJaegerConfig().getWriteTimeout(); }
+
 }

@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.FormBody;
 import okhttp3.HttpUrl;
@@ -47,7 +48,11 @@ public class InsightFinderService {
   private static final String RESPONSE_IS_PROJECT_EXIST = "isProjectExist";
   private static final String RESPONSE_SUCCESS = "success";
   private static InsightFinderService instance;
-  private final OkHttpClient httpClient = new OkHttpClient();
+  private final OkHttpClient httpClient = new OkHttpClient.Builder()
+      .connectTimeout(config.getIFConnectTimeout(), TimeUnit.SECONDS)
+      .readTimeout(config.getIFReadTimeout(), TimeUnit.SECONDS)
+      .writeTimeout(config.getIFWriteTimeout(), TimeUnit.SECONDS)
+      .build();
 
   private InsightFinderService() {
   }
