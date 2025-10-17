@@ -20,11 +20,10 @@ public class GrpcServer {
   public static void main(String[] args) throws Exception {
     // Start Workers
     int workerNum = config.getAppTraceWorkerNum();
-    try (ExecutorService executorService = Executors.newFixedThreadPool(workerNum)) {
-      for (int i = 0; i < workerNum; i++) {
-        executorService.submit(new TraceWorker(i));
-        log.info("Worker {} started", i);
-      }
+    ExecutorService executorService = Executors.newFixedThreadPool(workerNum);
+    for (int i = 0; i < workerNum; i++) {
+      executorService.submit(new TraceWorker(i));
+      log.info("Worker {} started", i);
     }
 
     // Services
