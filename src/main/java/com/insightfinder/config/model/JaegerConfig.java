@@ -13,4 +13,7 @@ public class JaegerConfig {
   private boolean tlsEnabled;
   private int grpcPort;
   private int uiPort;
+  private int connectTimeout; // in seconds
+  private int readTimeout;    // in seconds
+  private int writeTimeout;   // in seconds
 }

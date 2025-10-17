@@ -9,6 +9,7 @@ import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceResponse;
 import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -29,7 +30,12 @@ public class JaegerService {
     String baseURL = "%s://%s:%d".formatted(protocol, config.getJaegerServerName(),
         config.getJaegerUiPort());
     this.queryUrl = "%s/api/traces/".formatted(baseURL);
-    this.httpClient = new OkHttpClient();
+    this.httpClient = new OkHttpClient.Builder()
+        .connectTimeout(config.getJaegerConnectTimeout(), TimeUnit.SECONDS)
+        .readTimeout(config.getJaegerReadTimeout(), TimeUnit.SECONDS)
+        .writeTimeout(config.getJaegerWriteTimeout(), TimeUnit.SECONDS)
+        .build();
+
 
     // Init gRPC client
     String grpcUrl = "%s:%d".formatted(config.getJaegerServerName(), config.getJaegerGrpcPort());
@@ -77,7 +83,7 @@ public class JaegerService {
       }
       String responseBody = response.body().string();
       return JSONObject.parseObject(responseBody);
-    } catch (IOException e) {
+    } catch (Exception e) { //should also catch timeout exception
       log.error("Error querying trace data from Jaeger", e);
       return null;
     }

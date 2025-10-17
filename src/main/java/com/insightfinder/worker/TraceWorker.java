@@ -30,53 +30,58 @@ public class TraceWorker implements Runnable {
     TraceInfo traceInfo;
 
     while (true) {
-      // Get task from the queue.
-      traceInfo = uniqueDelayQueueManager.takeMessage();
-      if (traceInfo == null) {
-        continue;
-      }
-      log.info("Prepare to send trace '{}' to project '{}' for user '{}'.",
-          traceInfo.getTraceId(), traceInfo.getIfProject(), traceInfo.getIfUser());
-
-      // Create trace Project IfNotExist and save the result to cache.
-      if (!insightFinderService.isProjectCreated(traceInfo.getIfProject(), traceInfo.getIfSystem(),
-          traceInfo.getIfUser(), traceInfo.getIfLicenseKey(), DataType.DATA_TYPE_TRACE,
-          ProjectCloudType.PRIVATE_CLOUD)) {
-        continue;
-      }
-      String promptProjectName =
-          StringUtils.isNullOrEmpty(config.getPromptProjectName()) ?
-              traceInfo.getIfProject() + PROMPT_PROJECT_SUFFIX : config.getPromptProjectName();
-      String promptProjectSystemName =
-          StringUtils.isNullOrEmpty(config.getPromptSystemName()) ? traceInfo.getIfSystem() :
-              config.getPromptSystemName();
-      if (!insightFinderService.isProjectCreated(promptProjectName, promptProjectSystemName,
-          traceInfo.getIfUser(), traceInfo.getIfLicenseKey(),
-          DataType.DATA_TYPE_TRACE, ProjectCloudType.PRIVATE_CLOUD)) {
-        continue;
-      }
-      var promptInfo = new TraceInfo(traceInfo.getTraceId(), traceInfo.getIfUser(),
-          promptProjectName,
-          promptProjectSystemName, traceInfo.getIfLicenseKey());
-
-      // Get Trace data from Jaeger
-      var rawJaegerData = jaegerService.getTraceData(traceInfo.getTraceId());
-      if (rawJaegerData == null) {
-        continue;
-      }
-
-      var parsedTraceInfo = traceDataMapper.fromRawJaegerData(rawJaegerData, traceInfo);
-      if (parsedTraceInfo != null) {
-        var traceDataBody = parsedTraceInfo.getTraceDataBody();
-        var promptResponsePairs = parsedTraceInfo.getPromptResponsePairs();
-        if (traceDataBody != null && !traceDataBody.isEmpty()) {
-          insightFinderService.sendTraceData(traceDataBody, traceInfo, promptResponsePairs);
+      try {
+        // Get task from the queue.
+        traceInfo = uniqueDelayQueueManager.takeMessage();
+        if (traceInfo == null) {
+          continue;
         }
-        if (promptResponsePairs != null && !promptResponsePairs.isEmpty()) {
-          insightFinderService.sendPromptData(promptResponsePairs, promptInfo);
-        }else{
-          log.warn("Empty prompt prompt / response pairs for trace {}.", traceInfo.getTraceId());
+        log.info("Prepare to send trace '{}' to project '{}' for user '{}'.",
+            traceInfo.getTraceId(), traceInfo.getIfProject(), traceInfo.getIfUser());
+
+        // Create trace Project IfNotExist and save the result to cache.
+        if (!insightFinderService.isProjectCreated(traceInfo.getIfProject(),
+            traceInfo.getIfSystem(),
+            traceInfo.getIfUser(), traceInfo.getIfLicenseKey(), DataType.DATA_TYPE_TRACE,
+            ProjectCloudType.PRIVATE_CLOUD)) {
+          continue;
         }
+        String promptProjectName =
+            StringUtils.isNullOrEmpty(config.getPromptProjectName()) ?
+                traceInfo.getIfProject() + PROMPT_PROJECT_SUFFIX : config.getPromptProjectName();
+        String promptProjectSystemName =
+            StringUtils.isNullOrEmpty(config.getPromptSystemName()) ? traceInfo.getIfSystem() :
+                config.getPromptSystemName();
+        if (!insightFinderService.isProjectCreated(promptProjectName, promptProjectSystemName,
+            traceInfo.getIfUser(), traceInfo.getIfLicenseKey(),
+            DataType.DATA_TYPE_TRACE, ProjectCloudType.PRIVATE_CLOUD)) {
+          continue;
+        }
+        var promptInfo = new TraceInfo(traceInfo.getTraceId(), traceInfo.getIfUser(),
+            promptProjectName,
+            promptProjectSystemName, traceInfo.getIfLicenseKey());
+
+        // Get Trace data from Jaeger
+        var rawJaegerData = jaegerService.getTraceData(traceInfo.getTraceId());
+        if (rawJaegerData == null) {
+          continue;
+        }
+
+        var parsedTraceInfo = traceDataMapper.fromRawJaegerData(rawJaegerData, traceInfo);
+        if (parsedTraceInfo != null) {
+          var traceDataBody = parsedTraceInfo.getTraceDataBody();
+          var promptResponsePairs = parsedTraceInfo.getPromptResponsePairs();
+          if (traceDataBody != null && !traceDataBody.isEmpty()) {
+            insightFinderService.sendTraceData(traceDataBody, traceInfo, promptResponsePairs);
+          }
+          if (promptResponsePairs != null && !promptResponsePairs.isEmpty()) {
+            insightFinderService.sendPromptData(promptResponsePairs, promptInfo);
+          } else {
+            log.warn("Empty prompt prompt / response pairs for trace {}.", traceInfo.getTraceId());
+          }
+        }
+      } catch (Throwable e) {
+        log.error("Error processing trace data.", e);
       }
     }
   }
