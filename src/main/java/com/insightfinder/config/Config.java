@@ -13,6 +13,8 @@ import com.insightfinder.config.model.UnsuccessResponseExtractionConfig;
 import com.insightfinder.config.model.ValueMapping;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.yaml.snakeyaml.Yaml;
@@ -204,9 +206,9 @@ public class Config {
     return Boolean.TRUE.equals(getSensitiveDataConfig().isSensitiveDataFilterEnabled());
   }
 
-  public String getSensitiveDataRegex() {
-    String sensitiveDataRegex = getSensitiveDataConfig().getSensitiveDataRegex();
-    return sensitiveDataRegex == null ? "" : sensitiveDataRegex;
+  public List<String> getSensitiveDataRegex() {
+    List<String> sensitiveDataRegex = getSensitiveDataConfig().getSensitiveDataRegex();
+    return sensitiveDataRegex == null ? new ArrayList<>() : sensitiveDataRegex;
   }
 
   public String getReplacement() {
