@@ -155,18 +155,25 @@ public class JsonStructure {
   public void removeFromObject(JSONObject object) {
     if (isNoValue()) {
       JsonUtility.removeJsonValueFromObject(object, keys, 0);
-    } else {
-      Object valueObject = JsonUtility.getJsonValueObject(object, keys);
-      String valueStr = valueObject.toString().replaceAll("\\n", "");
-      List<String> needToRemove = RegexUtility.getMatchedGroups(valueStr, valueRegexPattern);
-      if (MiscUtility.isEmptyList(needToRemove)) {
-        return;
-      }
-      for (String needToRemoveStr : needToRemove) {
-        valueStr = valueStr.replace(needToRemoveStr, "");
-      }
-      reconstructObject(object, valueStr);
+      return;
     }
+    // Ensure the pattern is compiled if the constructor was called with parsePattern=false
+    if (valueRegexPattern == null) {
+      this.valueRegexPattern = IFRegexPattern.getPattern(valueRegex, false);
+    }
+    Object valueObject = JsonUtility.getJsonValueObject(object, keys);
+    if (valueObject == null) {
+      return;
+    }
+    String valueStr = valueObject.toString().replaceAll("\\n", "");
+    List<String> needToRemove = RegexUtility.getMatchedGroups(valueStr, valueRegexPattern);
+    if (MiscUtility.isEmptyList(needToRemove)) {
+      return;
+    }
+    for (String needToRemoveStr : needToRemove) {
+      valueStr = valueStr.replace(needToRemoveStr, "");
+    }
+    reconstructObject(object, valueStr);
   }
 
   public boolean matchPattern(JSONObject jsonObject) {
@@ -219,5 +226,23 @@ public class JsonStructure {
   public String toString() {
     return "JsonStructure [keys=" + Arrays.toString(keys) + ", valueRegex=" + valueRegex
         + ", jsonPath=" + jsonPath + "]";
+  }
+
+  /**
+   * Remove sensitive data matched by this JsonStructure from a JSON string.
+   * Returns the updated JSON string.
+   */
+  public String removeFromJsonString(String json) {
+    if (TextUtils.isEmpty(json)) {
+      return json;
+    }
+    try {
+      com.alibaba.fastjson2.JSONObject obj = com.alibaba.fastjson2.JSONObject.parseObject(json);
+      removeFromObject(obj);
+      return obj.toJSONString();
+    } catch (Exception ignore) {
+      // Not a JSON object string; return as-is
+      return json;
+    }
   }
 }
