@@ -8,10 +8,10 @@ import com.insightfinder.config.model.GrpcConfig;
 import com.insightfinder.config.model.InsightFinderConfig;
 import com.insightfinder.config.model.JaegerConfig;
 import com.insightfinder.config.model.PromptExtractionConfig;
+import com.insightfinder.config.model.SensitiveDataConfig;
 import com.insightfinder.config.model.UnsuccessResponseExtractionConfig;
 import com.insightfinder.config.model.ValueMapping;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -23,13 +23,14 @@ public class Config {
   private static final String CONFIG_FILE_PATH = "application.yml";
   private static Config instance;
   private ConfigModel configModel;
+  private static final String workDir = System.getProperty("user.dir");
 
   private Config() {
     try {
       loadConfigs();
     } catch (IOException e) {
       log.error("Error loading config file: {}", e.getMessage());
-      throw new IllegalStateException("Failed to load configuration", e);
+      System.exit(1);
     }
   }
 
@@ -41,14 +42,9 @@ public class Config {
   }
 
   private void loadConfigs() throws IOException {
-    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-
-    try (var inputStream = cl.getResourceAsStream(CONFIG_FILE_PATH)) {
-      if (inputStream == null) {
-        throw new FileNotFoundException(
-            "application.yml not found in classpath");
-      }
-      configModel = new Yaml().loadAs(inputStream, ConfigModel.class);
+    try (FileInputStream fileInputStream = new FileInputStream(
+        (workDir + "/" + CONFIG_FILE_PATH))) {
+      configModel = new Yaml().loadAs(fileInputStream, ConfigModel.class);
     }
   }
 
@@ -90,6 +86,10 @@ public class Config {
 
   private JaegerConfig getJaegerConfig() {
     return configModel.getJaeger();
+  }
+
+  private SensitiveDataConfig getSensitiveDataConfig() {
+    return configModel.getSensitiveData();
   }
 
   public int getAppTraceWorkerNum() {
@@ -200,4 +200,17 @@ public class Config {
 
   public int getJaegerWriteTimeout() { return getJaegerConfig().getWriteTimeout(); }
 
+  public boolean isSensitiveDataFilterEnabled() {
+    return Boolean.TRUE.equals(getSensitiveDataConfig().isSensitiveDataFilterEnabled());
+  }
+
+  public String getSensitiveDataRegex() {
+    String sensitiveDataRegex = getSensitiveDataConfig().getSensitiveDataRegex();
+    return sensitiveDataRegex == null ? "" : sensitiveDataRegex;
+  }
+
+  public String getReplacement() {
+    String replacement = getSensitiveDataConfig().getReplacement();
+    return replacement == null ? "" : replacement;
+  }
 }
