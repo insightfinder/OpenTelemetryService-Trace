@@ -11,6 +11,7 @@ import com.insightfinder.config.model.PromptExtractionConfig;
 import com.insightfinder.config.model.UnsuccessResponseExtractionConfig;
 import com.insightfinder.config.model.ValueMapping;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -22,14 +23,13 @@ public class Config {
   private static final String CONFIG_FILE_PATH = "application.yml";
   private static Config instance;
   private ConfigModel configModel;
-  private static final String workDir = System.getProperty("user.dir");
 
   private Config() {
     try {
       loadConfigs();
     } catch (IOException e) {
       log.error("Error loading config file: {}", e.getMessage());
-      System.exit(1);
+      throw new IllegalStateException("Failed to load configuration", e);
     }
   }
 
@@ -41,9 +41,14 @@ public class Config {
   }
 
   private void loadConfigs() throws IOException {
-    try (FileInputStream fileInputStream = new FileInputStream(
-        (workDir + "/" + CONFIG_FILE_PATH))) {
-      configModel = new Yaml().loadAs(fileInputStream, ConfigModel.class);
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+    try (var inputStream = cl.getResourceAsStream(CONFIG_FILE_PATH)) {
+      if (inputStream == null) {
+        throw new FileNotFoundException(
+            "application.yml not found in classpath");
+      }
+      configModel = new Yaml().loadAs(inputStream, ConfigModel.class);
     }
   }
 
