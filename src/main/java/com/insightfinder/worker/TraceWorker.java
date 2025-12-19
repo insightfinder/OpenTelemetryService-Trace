@@ -5,10 +5,18 @@ import com.insightfinder.mapper.TraceDataMapper;
 import com.insightfinder.model.DataType;
 import com.insightfinder.model.ProjectCloudType;
 import com.insightfinder.model.message.TraceInfo;
+import com.insightfinder.model.request.ContentData;
+import com.insightfinder.model.request.InputPrompt;
+import com.insightfinder.model.request.ResponseRecord;
 import com.insightfinder.service.InsightFinderService;
 import com.insightfinder.service.JaegerService;
+import com.insightfinder.service.SensitiveDataFilter;
 import com.insightfinder.service.UniqueDelayQueueManager;
+import com.insightfinder.util.TokenizerUtil;
 import io.opentelemetry.api.internal.StringUtils;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -20,6 +28,8 @@ public class TraceWorker implements Runnable {
   private final TraceDataMapper traceDataMapper = TraceDataMapper.getInstance();
   private final Config config = Config.getInstance();
   private static final String PROMPT_PROJECT_SUFFIX = "-Prompt";
+  private final SensitiveDataFilter sensitiveDataFilter = SensitiveDataFilter.getInstance();
+
 
   public TraceWorker(int threadNum) {
     log.info("Trace Worker thread {} started.", threadNum);
@@ -70,7 +80,8 @@ public class TraceWorker implements Runnable {
         var parsedTraceInfo = traceDataMapper.fromRawJaegerData(rawJaegerData, traceInfo);
         if (parsedTraceInfo != null) {
           var traceDataBody = parsedTraceInfo.getTraceDataBody();
-          var promptResponsePairs = parsedTraceInfo.getPromptResponsePairs();
+          var promptResponsePairs = parsedTraceInfo.getPromptResponsePairs();  // todo: filter on promptResponsePairs
+           promptResponsePairs = sanitize(promptResponsePairs);
           if (traceDataBody != null && !traceDataBody.isEmpty()) {
             insightFinderService.sendTraceData(traceDataBody, traceInfo, promptResponsePairs);
           }
@@ -84,5 +95,32 @@ public class TraceWorker implements Runnable {
         log.error("Error processing trace data.", e);
       }
     }
+  }
+
+  private List<ContentData> sanitize(List<ContentData> pairs) {
+    if (pairs == null || pairs.isEmpty() || sensitiveDataFilter == null) {
+      return pairs;
+    }
+    List<ContentData> sanitized = new ArrayList<>(pairs.size());
+    for (ContentData cd : pairs) {
+      if (cd == null || cd.getInputPrompt() == null || cd.getResponseRecord() == null) {
+        sanitized.add(cd);
+        continue;
+      }
+      String input = Objects.toString(cd.getInputPrompt().getPrompt(), "");
+      String output = Objects.toString(cd.getResponseRecord().getResponse(), "");
+
+      String safeInput = SensitiveDataFilter.filterString(input, sensitiveDataFilter);
+      String safeOutput = SensitiveDataFilter.filterString(output, sensitiveDataFilter);
+
+      int promptTokens = TokenizerUtil.splitByWhiteSpaceTokenizer(safeInput);
+      int responseTokens = TokenizerUtil.splitByWhiteSpaceTokenizer(safeOutput);
+
+      sanitized.add(ContentData.builder()
+          .inputPrompt(new InputPrompt(safeInput, promptTokens))
+          .responseRecord(new ResponseRecord(safeOutput, responseTokens))
+          .build());
+    }
+    return sanitized;
   }
 }

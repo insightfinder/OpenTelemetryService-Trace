@@ -90,7 +90,7 @@ public class Config {
     return configModel.getJaeger();
   }
 
-  private SensitiveDataConfig getSensitiveDataConfig() {
+  public SensitiveDataConfig getSensitiveDataConfig() {
     return configModel.getSensitiveData();
   }
 

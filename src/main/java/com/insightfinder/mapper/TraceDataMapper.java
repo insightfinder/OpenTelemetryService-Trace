@@ -17,6 +17,7 @@ import com.insightfinder.model.request.ResponseRecord;
 import com.insightfinder.model.request.SpanDataBody;
 import com.insightfinder.model.request.SpanDataBody.SpanDataBodyBuilder;
 import com.insightfinder.model.request.TraceDataBody;
+import com.insightfinder.service.SensitiveDataFilter;
 import com.insightfinder.util.ParseUtil;
 import com.insightfinder.util.TokenizerUtil;
 import io.opentelemetry.api.internal.StringUtils;
