@@ -12,6 +12,7 @@ import com.insightfinder.config.model.SensitiveDataConfig;
 import com.insightfinder.config.model.UnsuccessResponseExtractionConfig;
 import com.insightfinder.config.model.ValueMapping;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,8 +33,7 @@ public class Config {
       loadConfigs();
     } catch (IOException e) {
       log.error("Error loading config file: {}", e.getMessage());
-      System.exit(1);
-    }
+      throw new IllegalStateException("Failed to load configuration", e);    }
   }
 
   public static Config getInstance() {
@@ -44,9 +44,14 @@ public class Config {
   }
 
   private void loadConfigs() throws IOException {
-    try (FileInputStream fileInputStream = new FileInputStream(
-        (workDir + "/" + CONFIG_FILE_PATH))) {
-      configModel = new Yaml().loadAs(fileInputStream, ConfigModel.class);
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+    try (var inputStream = cl.getResourceAsStream(CONFIG_FILE_PATH)) {
+      if (inputStream == null) {
+        throw new FileNotFoundException(
+            "application.yml not found in classpath");
+      }
+      configModel = new Yaml().loadAs(inputStream, ConfigModel.class);
     }
   }
 
