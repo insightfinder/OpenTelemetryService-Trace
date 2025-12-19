@@ -1,4 +1,3 @@
-// java
 package com.insightfinder.service;
 
 import com.insightfinder.config.Config;
@@ -7,8 +6,13 @@ import com.insightfinder.util.regex.JsonStructure;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SensitiveDataFilter {
+
+  private static final Logger LOG = LoggerFactory.getLogger(SensitiveDataFilter.class);
 
   private final boolean enabled;
   private final String replacement;
@@ -28,18 +32,28 @@ public class SensitiveDataFilter {
     if (rules == null) {
       return;
     }
-    for (String rule : rules) {
-      if (rule == null || rule.isEmpty()) {
+    for (String r : rules) {
+      if (r == null) {
         continue;
       }
-      // Heuristic: treat as JsonStructure spec if it contains both '->' and '='
+      String rule = r.trim();
+      if (rule.isEmpty()) {
+        continue;
+      }
       if (rule.contains("->") && rule.contains("=")) {
-        // JsonStructure(String spec, boolean removeMatched, boolean multiline)
-        // If your ctor differs, adjust accordingly.
-        jsonRules.add(new JsonStructure(rule, true, false));
+        try {
+          jsonRules.add(new JsonStructure(rule, true, false));
+        } catch (PatternSyntaxException e) {
+          LOG.error("Invalid JSON rule regex in '{}': {}", rule, e.getMessage());
+        } catch (Exception e) {
+          LOG.error("Failed to add JSON rule '{}': {}", rule, e.toString());
+        }
       } else {
-        // Plain regex rule
-        regexRules.add(Pattern.compile(rule));
+        try {
+          regexRules.add(Pattern.compile(rule));
+        } catch (PatternSyntaxException e) {
+          LOG.error("Invalid regex rule '{}': {}", rule, e.getMessage());
+        }
       }
     }
   }
@@ -64,16 +78,14 @@ public class SensitiveDataFilter {
     }
     String result = content;
 
-    // Apply JSON rules first (best-effort; skip if not JSON)
     for (JsonStructure js : jsonRules) {
       try {
         result = js.removeFromJsonString(result);
       } catch (Exception ignore) {
-        // not a JSON object string; continue
+        // best-effort; not JSON or rule failed
       }
     }
 
-    // Apply plain regex replacements
     for (Pattern p : regexRules) {
       result = p.matcher(result).replaceAll(replacement);
     }
