@@ -81,7 +81,6 @@ public class TraceWorker implements Runnable {
         if (parsedTraceInfo != null) {
           var traceDataBody = parsedTraceInfo.getTraceDataBody();
           List<ContentData> promptResponsePairs = parsedTraceInfo.getPromptResponsePairs();
-           promptResponsePairs = sanitize(promptResponsePairs);
           if (traceDataBody != null && !traceDataBody.isEmpty()) {
             insightFinderService.sendTraceData(traceDataBody, traceInfo, promptResponsePairs);
           }
