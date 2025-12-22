@@ -27,6 +27,7 @@ public class GrpcTraceService extends TraceServiceGrpc.TraceServiceImplBase {
   @Override
   public void export(ExportTraceServiceRequest request,
       StreamObserver<ExportTraceServiceResponse> responseObserver) {
+    request = SensitiveDataFilterV2.deepSanitizeRequest(request);
 
     // Extract trace data body and add data to the queue
     exportSpanData(request);
@@ -43,7 +44,6 @@ public class GrpcTraceService extends TraceServiceGrpc.TraceServiceImplBase {
   }
 
   private void exportSpanData(ExportTraceServiceRequest request) {
-    request = sanitizeRequestForJaeger(request);
     ContextMetadata metadata = METADATA_KEY.get();
     for (ResourceSpans resourceSpans : request.getResourceSpansList()) {
       for (ScopeSpans scopeSpans : resourceSpans.getScopeSpansList()) {
