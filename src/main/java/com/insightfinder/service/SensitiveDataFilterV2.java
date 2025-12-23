@@ -76,7 +76,7 @@ public class SensitiveDataFilterV2 {
     if (input == null) return null;
     String sanitized = input;
     for (String pattern : config.getSensitiveDataRegex()) {
-      sanitized = sanitized.replaceAll(pattern, "");
+      sanitized = sanitized.replaceAll(pattern, config.getReplacement());
     }
     return sanitized;
   }
