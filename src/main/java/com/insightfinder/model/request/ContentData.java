@@ -1,6 +1,7 @@
 package com.insightfinder.model.request;
 
 import com.insightfinder.model.SpanOverwrite;
+import com.insightfinder.service.SensitiveDataFilter;
 import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Data;

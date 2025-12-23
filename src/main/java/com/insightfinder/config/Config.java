@@ -8,11 +8,14 @@ import com.insightfinder.config.model.GrpcConfig;
 import com.insightfinder.config.model.InsightFinderConfig;
 import com.insightfinder.config.model.JaegerConfig;
 import com.insightfinder.config.model.PromptExtractionConfig;
+import com.insightfinder.config.model.SensitiveDataConfig;
 import com.insightfinder.config.model.UnsuccessResponseExtractionConfig;
 import com.insightfinder.config.model.ValueMapping;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.yaml.snakeyaml.Yaml;
@@ -23,14 +26,14 @@ public class Config {
   private static final String CONFIG_FILE_PATH = "application.yml";
   private static Config instance;
   private ConfigModel configModel;
+  private static final String workDir = System.getProperty("user.dir");
 
   private Config() {
     try {
       loadConfigs();
     } catch (IOException e) {
       log.error("Error loading config file: {}", e.getMessage());
-      throw new IllegalStateException("Failed to load configuration", e);
-    }
+      throw new IllegalStateException("Failed to load configuration", e);    }
   }
 
   public static Config getInstance() {
@@ -90,6 +93,10 @@ public class Config {
 
   private JaegerConfig getJaegerConfig() {
     return configModel.getJaeger();
+  }
+
+  public SensitiveDataConfig getSensitiveDataConfig() {
+    return configModel.getSensitiveData();
   }
 
   public int getAppTraceWorkerNum() {
@@ -200,4 +207,17 @@ public class Config {
 
   public int getJaegerWriteTimeout() { return getJaegerConfig().getWriteTimeout(); }
 
+  public boolean isSensitiveDataFilterEnabled() {
+    return Boolean.TRUE.equals(getSensitiveDataConfig().isSensitiveDataFilterEnabled());
+  }
+
+  public List<String> getSensitiveDataRegex() {
+    List<String> sensitiveDataRegex = getSensitiveDataConfig().getSensitiveDataRegex();
+    return sensitiveDataRegex == null ? new ArrayList<>() : sensitiveDataRegex;
+  }
+
+  public String getReplacement() {
+    String replacement = getSensitiveDataConfig().getReplacement();
+    return replacement == null ? "" : replacement;
+  }
 }
