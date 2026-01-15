@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.insightfinder.model.request.SpanDataBody;
 import com.insightfinder.model.request.TraceDataBody;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 public class TraceDataBodyTest {
@@ -40,10 +40,10 @@ public class TraceDataBodyTest {
     Map<String, SpanDataBody> expectedSpan = new HashMap<>();
     expectedSpan.put("r1", root1);
     expectedSpan.put("r2", root2);
-    Map<String, Set<SpanDataBody>> expectedChildSpans = new HashMap<>();
-    expectedChildSpans.put("r1", Set.of(childSpan1, childSpan2));
-    expectedChildSpans.put("r2", Set.of(childSpan3));
-    expectedChildSpans.put("c3", Set.of(childSpan4));
+    Map<String, List<SpanDataBody>> expectedChildSpans = new HashMap<>();
+    expectedChildSpans.put("r1", List.of(childSpan1, childSpan2));
+    expectedChildSpans.put("r2", List.of(childSpan3));
+    expectedChildSpans.put("c3", List.of(childSpan4));
     assertThat(trace.getSpans()).containsExactlyEntriesOf(expectedSpan);
     assertThat(trace.getChildSpans()).containsExactlyEntriesOf(expectedChildSpans);
     assertThat(trace.getTotalToken()).isEqualTo(38);
@@ -113,11 +113,11 @@ public class TraceDataBodyTest {
     SpanDataBody expectedChildSpan7 = getExampleSpan("c7", "c2", "child7");
     SpanDataBody expectedChildSpan8 = getExampleSpan("c8", "c4", "child8");
     SpanDataBody expectedChildSpan9 = getExampleSpan("c9", "c1", "child9");
-    expectedChildSpan4.addChildSpans(Set.of(expectedChildSpan6, expectedChildSpan8));
+    expectedChildSpan4.addChildSpans(List.of(expectedChildSpan6, expectedChildSpan8));
     expectedChildSpan1.addChildSpans(
-        Set.of(expectedChildSpan4, expectedChildSpan5, expectedChildSpan9));
-    expectedChildSpan2.addChildSpans(Set.of(expectedChildSpan7));
-    expectedRoot.addChildSpans(Set.of(expectedChildSpan1, expectedChildSpan2, expectedChildSpan3));
+        List.of(expectedChildSpan4, expectedChildSpan5, expectedChildSpan9));
+    expectedChildSpan2.addChildSpans(List.of(expectedChildSpan7));
+    expectedRoot.addChildSpans(List.of(expectedChildSpan1, expectedChildSpan2, expectedChildSpan3));
     expectedSpan.put("r1", expectedRoot);
 
     assertThat(trace.getSpans()).containsExactlyEntriesOf(expectedSpan);
