@@ -3,8 +3,8 @@ package com.insightfinder.model.request;
 import com.alibaba.fastjson2.annotation.JSONField;
 import io.opentelemetry.api.internal.StringUtils;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 
@@ -39,10 +39,13 @@ public class SpanDataBody {
   @JSONField(name = "childSpans")
   private final Map<String, SpanDataBody> childSpans = new HashMap<>();
 
+  @JSONField(name = "seqID")
+  private int seqID;
+
   private transient final String overwriteSpanId;
 
 
-  public void addChildSpans(Set<SpanDataBody> childSpans) {
+  public void addChildSpans(List<SpanDataBody> childSpans) {
     childSpans.forEach(childSpan -> {
       var childSpanId = childSpan.getSpanID();
       String overwriteSpanId = childSpan.getOverwriteSpanId();
