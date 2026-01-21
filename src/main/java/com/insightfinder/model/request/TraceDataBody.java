@@ -4,10 +4,10 @@ import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.annotation.JSONField;
 import com.insightfinder.model.SpanOverwrite;
 import io.opentelemetry.api.internal.StringUtils;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.Data;
 
 @Data
@@ -40,7 +40,7 @@ public class TraceDataBody {
   @JSONField(name = "username")
   private String username;
 
-  private transient Map<String, Set<SpanDataBody>> childSpans = new HashMap<>(); // parentSpanId -> childSpans
+  private transient Map<String, List<SpanDataBody>> childSpans = new HashMap<>(); // parentSpanId -> childSpans
 
   public void addSpan(SpanDataBody span) {
     var spanTotalTokens = span.getTotalTokens();
@@ -51,7 +51,7 @@ public class TraceDataBody {
     if (StringUtils.isNullOrEmpty(parentSpanId)) {
       spans.put(span.getSpanID(), span);
     } else {
-      var childSpans = this.childSpans.getOrDefault(parentSpanId, new HashSet<>());
+      var childSpans = this.childSpans.getOrDefault(parentSpanId, new ArrayList<>());
       childSpans.add(span);
       this.childSpans.put(parentSpanId, childSpans);
     }
@@ -63,8 +63,9 @@ public class TraceDataBody {
       overwriteSpanId(spanOverwrite);
       overwriteTraceId = spanOverwrite.getOverwriteSpanId();
     }
+    int seqID = 0;
     for (SpanDataBody rootSpan : spans.values()) {
-      buildSpanRelation(rootSpan, overwriteTraceId);
+      buildSpanRelation(rootSpan, overwriteTraceId, seqID++);
     }
   }
 
@@ -76,13 +77,13 @@ public class TraceDataBody {
       span.setSpanID(overwriteSpanId);
       spans.put(overwriteSpanId, span);
     }
-    Set<SpanDataBody> childSpans = this.childSpans.remove(originalSpanId);
+    List<SpanDataBody> childSpans = this.childSpans.remove(originalSpanId);
     if (childSpans != null) {
       this.childSpans.put(overwriteSpanId, childSpans);
     }
   }
 
-  private void buildSpanRelation(SpanDataBody rootSpan, String overwriteTraceId) {
+  private void buildSpanRelation(SpanDataBody rootSpan, String overwriteTraceId, int seqID) {
     if (rootSpan == null || rootSpan.getSpanID() == null) {
       return;
     }
@@ -92,11 +93,16 @@ public class TraceDataBody {
     if (!StringUtils.isNullOrEmpty(rootSpan.getOverwriteSpanId())) {
       rootSpan.setSpanID(rootSpan.getOverwriteSpanId());
     }
+
+    // Set the seqID for the current span
+    rootSpan.setSeqID(seqID);
+
     var childSpans = this.childSpans.get(rootSpan.getSpanID());
     if (childSpans != null) {
       rootSpan.addChildSpans(childSpans);
-      for (SpanDataBody childSpan : childSpans) {
-        buildSpanRelation(childSpan, overwriteTraceId);
+      // Assign seqID to each child based on their position in the list
+      for (int i = 0; i < childSpans.size(); i++) {
+        buildSpanRelation(childSpans.get(i), overwriteTraceId, i);
       }
     }
   }
