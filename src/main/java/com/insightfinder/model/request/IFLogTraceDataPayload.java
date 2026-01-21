@@ -31,14 +31,14 @@ public class IFLogTraceDataPayload {
       this.promptData.setInputPrompt(promptResponsePair.getInputPrompt());
       this.promptData.setResponseRecord(promptResponsePair.getResponseRecord());
       this.promptData.setSessionId(promptResponsePair.getSessionId());
-      List<InputPrompt> inputPromptList = promptResponsePairs.stream()
-          .map(ContentData::getInputPrompt)
-          .toList();
-      List<ResponseRecord> responseRecordList = promptResponsePairs.stream()
-          .map(ContentData::getResponseRecord)
-          .toList();
-      this.promptData.setInputPromptList(inputPromptList);
-      this.promptData.setResponseRecordList(responseRecordList);
+//      List<InputPrompt> inputPromptList = promptResponsePairs.stream()
+//          .map(ContentData::getInputPrompt)
+//          .toList();
+//      List<ResponseRecord> responseRecordList = promptResponsePairs.stream()
+//          .map(ContentData::getResponseRecord)
+//          .toList();
+//      this.promptData.setInputPromptList(inputPromptList);
+//      this.promptData.setResponseRecordList(responseRecordList);
     }
   }
 
@@ -49,8 +49,8 @@ public class IFLogTraceDataPayload {
     private String entryOperation;
     private InputPrompt inputPrompt;
     private ResponseRecord responseRecord;
-    private List<InputPrompt> inputPromptList;
-    private List<ResponseRecord> responseRecordList;
+//    private List<InputPrompt> inputPromptList;
+//    private List<ResponseRecord> responseRecordList;
     private String sessionId;
   }
 }
