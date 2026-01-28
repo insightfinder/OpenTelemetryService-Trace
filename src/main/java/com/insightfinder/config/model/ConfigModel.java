@@ -14,4 +14,6 @@ public class ConfigModel {
   private JaegerConfig jaeger;
   private AppConfig app;
   private DataConfig data;
+  private SensitiveDataConfig sensitiveData;
+
 }
