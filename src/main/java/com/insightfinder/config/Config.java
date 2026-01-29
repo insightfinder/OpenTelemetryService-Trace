@@ -11,6 +11,8 @@ import com.insightfinder.config.model.PromptExtractionConfig;
 import com.insightfinder.config.model.SensitiveDataConfig;
 import com.insightfinder.config.model.UnsuccessResponseExtractionConfig;
 import com.insightfinder.config.model.ValueMapping;
+
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -44,14 +46,24 @@ public class Config {
   }
 
   private void loadConfigs() throws IOException {
-    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+    File externalFile = new File(CONFIG_FILE_PATH);
+    Yaml yaml = new Yaml();
 
-    try (var inputStream = cl.getResourceAsStream(CONFIG_FILE_PATH)) {
-      if (inputStream == null) {
-        throw new FileNotFoundException(
-            "application.yml not found in classpath");
+    if (externalFile.exists()) {
+      log.info("Loading configuration from current directory: {}", externalFile.getAbsolutePath());
+      try (var inputStream = new FileInputStream(externalFile)) {
+        configModel = yaml.loadAs(inputStream, ConfigModel.class);
       }
-      configModel = new Yaml().loadAs(inputStream, ConfigModel.class);
+    } else {
+      log.info("External config not found, looking in classpath...");
+      ClassLoader cl = Thread.currentThread().getContextClassLoader();
+      try (var inputStream = cl.getResourceAsStream(CONFIG_FILE_PATH)) {
+        if (inputStream == null) {
+          throw new FileNotFoundException(
+              "application.yml not found in current directory or classpath");
+        }
+        configModel = yaml.loadAs(inputStream, ConfigModel.class);
+      }
     }
   }
 
