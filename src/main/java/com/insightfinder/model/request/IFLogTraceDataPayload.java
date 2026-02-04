@@ -26,19 +26,28 @@ public class IFLogTraceDataPayload {
     if (!promptResponsePairs.isEmpty()) {
       var promptResponsePair = promptResponsePairs.getFirst();
       this.promptData = new LogTracePromptEventLite();
-      this.promptData.setSpanId(promptResponsePair.getInputPrompt().getSpanId());
       this.promptData.setEntryOperation(promptResponsePair.getEntryOperation());
-      this.promptData.setInputPrompt(promptResponsePair.getInputPrompt());
-      this.promptData.setResponseRecord(promptResponsePair.getResponseRecord());
       this.promptData.setSessionId(promptResponsePair.getSessionId());
-//      List<InputPrompt> inputPromptList = promptResponsePairs.stream()
-//          .map(ContentData::getInputPrompt)
-//          .toList();
-//      List<ResponseRecord> responseRecordList = promptResponsePairs.stream()
-//          .map(ContentData::getResponseRecord)
-//          .toList();
-//      this.promptData.setInputPromptList(inputPromptList);
-//      this.promptData.setResponseRecordList(responseRecordList);
+
+      List<InputPrompt> inputPromptList = promptResponsePairs.stream()
+          .map(ContentData::getInputPrompt)
+          .toList();
+      List<ResponseRecord> responseRecordList = promptResponsePairs.stream()
+          .map(ContentData::getResponseRecord)
+          .toList();
+      this.promptData.setInputPromptList(inputPromptList);
+      this.promptData.setResponseRecordList(responseRecordList);
+
+      // Set individual fields only if lists are empty
+      if (inputPromptList.isEmpty() && responseRecordList.isEmpty()) {
+        this.promptData.setSpanId(promptResponsePair.getInputPrompt().getSpanId());
+        this.promptData.setInputPrompt(promptResponsePair.getInputPrompt());
+        this.promptData.setResponseRecord(promptResponsePair.getResponseRecord());
+      } else {
+        this.promptData.setSpanId(null);
+        this.promptData.setInputPrompt(null);
+        this.promptData.setResponseRecord(null);
+      }
     }
   }
 
@@ -49,8 +58,8 @@ public class IFLogTraceDataPayload {
     private String entryOperation;
     private InputPrompt inputPrompt;
     private ResponseRecord responseRecord;
-//    private List<InputPrompt> inputPromptList;
-//    private List<ResponseRecord> responseRecordList;
+    private List<InputPrompt> inputPromptList;
+    private List<ResponseRecord> responseRecordList;
     private String sessionId;
   }
 }
