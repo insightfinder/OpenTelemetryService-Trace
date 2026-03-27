@@ -16,6 +16,7 @@ import com.insightfinder.model.request.InputPrompt;
 import com.insightfinder.model.request.ResponseRecord;
 import com.insightfinder.model.request.SpanDataBody;
 import com.insightfinder.model.request.SpanDataBody.SpanDataBodyBuilder;
+import com.insightfinder.model.request.SpanNode;
 import com.insightfinder.model.request.TraceDataBody;
 import com.insightfinder.service.SensitiveDataFilter;
 import com.insightfinder.util.ParseUtil;
@@ -23,7 +24,9 @@ import com.insightfinder.util.TokenizerUtil;
 import io.opentelemetry.api.internal.StringUtils;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -148,6 +151,7 @@ public class TraceDataMapper {
       return com.insightfinder.mapper.TraceInfo.builder()
           .promptResponsePairs(promptPairs.values().stream().toList())
           .traceDataBody(traceDataBody)
+          .spanTree(buildSpanTree(traceDataBody))
           .build();
     } catch (Exception e) {
       log.error("Error mapping Jaeger raw data to IF trace: {}", e.getMessage());
@@ -515,5 +519,23 @@ public class TraceDataMapper {
       return null;
     }
     return (String) uuid;
+  }
+
+  private SpanNode buildSpanTree(TraceDataBody traceDataBody) {
+    return traceDataBody.getSpans().values().stream()
+        .findFirst()
+        .map(this::toSpanNode)
+        .orElse(null);
+  }
+
+  private SpanNode toSpanNode(SpanDataBody span) {
+    List<SpanNode> children = span.getChildSpans().values().stream()
+        .map(this::toSpanNode)
+        .collect(Collectors.toList());
+    return SpanNode.builder()
+        .spanId(span.getSpanID())
+        .operationName(span.getOperationName())
+        .children(children.isEmpty() ? null : children)
+        .build();
   }
 }

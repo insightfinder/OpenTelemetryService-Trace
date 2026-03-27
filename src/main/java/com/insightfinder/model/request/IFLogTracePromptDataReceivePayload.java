@@ -20,4 +20,7 @@ public class IFLogTracePromptDataReceivePayload {
 
   @JSONField(name = "agentType")
   private String insightAgentType;
+
+  @JSONField(name = "spanTree")
+  private SpanNode spanTree;
 }
