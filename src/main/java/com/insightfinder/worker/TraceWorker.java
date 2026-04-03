@@ -8,6 +8,7 @@ import com.insightfinder.model.message.TraceInfo;
 import com.insightfinder.model.request.ContentData;
 import com.insightfinder.model.request.InputPrompt;
 import com.insightfinder.model.request.ResponseRecord;
+import com.insightfinder.model.request.SpanNode;
 import com.insightfinder.service.InsightFinderService;
 import com.insightfinder.service.JaegerService;
 import com.insightfinder.service.SensitiveDataFilter;
@@ -85,7 +86,7 @@ public class TraceWorker implements Runnable {
             insightFinderService.sendTraceData(traceDataBody, traceInfo, promptResponsePairs);
           }
           if (promptResponsePairs != null && !promptResponsePairs.isEmpty()) {
-            insightFinderService.sendPromptData(promptResponsePairs, promptInfo);
+            insightFinderService.sendPromptData(promptResponsePairs, promptInfo, parsedTraceInfo.getSpanTree());
           } else {
             log.warn("Empty prompt prompt / response pairs for trace {}.", traceInfo.getTraceId());
           }

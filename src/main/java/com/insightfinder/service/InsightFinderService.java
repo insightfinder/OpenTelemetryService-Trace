@@ -19,6 +19,7 @@ import com.insightfinder.model.request.ContentData;
 import com.insightfinder.model.request.IFLogTraceDataPayload;
 import com.insightfinder.model.request.IFLogTraceDataReceivePayload;
 import com.insightfinder.model.request.IFLogTracePromptDataReceivePayload;
+import com.insightfinder.model.request.SpanNode;
 import com.insightfinder.model.request.TraceDataBody;
 import io.opentelemetry.api.internal.StringUtils;
 import java.io.IOException;
@@ -214,13 +215,15 @@ public class InsightFinderService {
     }
   }
 
-  public void sendPromptData(List<ContentData> promptResponsePairs, TraceInfo traceInfo) {
+  public void sendPromptData(List<ContentData> promptResponsePairs, TraceInfo traceInfo,
+      SpanNode spanTree) {
     if (StringUtils.isNullOrEmpty(config.getIFPromptUri())) {
       return;
     }
     var iFPayload = new IFLogTracePromptDataReceivePayload();
 
     iFPayload.setLogTracePromptDataList(JSON.toJSONString(promptResponsePairs));
+    iFPayload.setSpanTree(spanTree);
     iFPayload.setUserName(traceInfo.getIfUser());
     iFPayload.setLicenseKey(traceInfo.getIfLicenseKey());
     iFPayload.setProjectName(traceInfo.getIfProject());
