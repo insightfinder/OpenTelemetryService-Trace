@@ -5,6 +5,7 @@ import com.insightfinder.config.model.SensitiveDataConfig;
 import com.insightfinder.util.regex.JsonStructure;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import org.slf4j.Logger;
@@ -87,9 +88,30 @@ public class SensitiveDataFilter {
     }
 
     for (Pattern p : regexRules) {
-      result = p.matcher(result).replaceAll(replacement);
+      result = maskSensitiveValue(result, p.pattern(), replacement);
     }
     return result;
+  }
+
+  // Tries to match "keyword=value" or "keyword:value" and replace only the value part.
+  // Falls back to replacing whatever the raw pattern matches.
+  private static String maskSensitiveValue(String text, String rawPattern, String replacement) {
+    try {
+      Pattern withValue = Pattern.compile("(?i)(?:" + rawPattern + ")(\\s*[=:]\\s*)(\\S+)");
+      Matcher m = withValue.matcher(text);
+      if (m.find()) {
+        StringBuffer sb = new StringBuffer();
+        m.reset();
+        while (m.find()) {
+          int keywordEnd = m.start(1) - m.start();
+          m.appendReplacement(sb, Matcher.quoteReplacement(
+              m.group().substring(0, keywordEnd) + m.group(1) + replacement));
+        }
+        m.appendTail(sb);
+        return sb.toString();
+      }
+    } catch (Exception ignored) {}
+    return text.replaceAll(rawPattern, replacement);
   }
 
   public static String filterString(String content, SensitiveDataFilter filter) {

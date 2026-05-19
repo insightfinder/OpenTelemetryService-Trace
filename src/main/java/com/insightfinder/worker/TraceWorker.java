@@ -86,7 +86,7 @@ public class TraceWorker implements Runnable {
             insightFinderService.sendTraceData(traceDataBody, traceInfo, promptResponsePairs);
           }
           if (promptResponsePairs != null && !promptResponsePairs.isEmpty()) {
-            insightFinderService.sendPromptData(promptResponsePairs, promptInfo, parsedTraceInfo.getSpanTree());
+            insightFinderService.sendPromptData(sanitize(promptResponsePairs), promptInfo, parsedTraceInfo.getSpanTree());
           } else {
             log.warn("Empty prompt prompt / response pairs for trace {}.", traceInfo.getTraceId());
           }
