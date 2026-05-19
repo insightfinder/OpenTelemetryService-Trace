@@ -12,6 +12,12 @@ import java.util.regex.Pattern;
 
 public class SensitiveDataFilterV2 {
   private static final Config config = Config.getInstance();
+  private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(SensitiveDataFilterV2.class);
+
+  static {
+    LOG.info("SensitiveDataFilterV2 initialized with {} pattern(s), enabled={}",
+        config.getSensitiveDataRegex().size(), config.isSensitiveDataFilterEnabled());
+  }
 
   public static ExportTraceServiceRequest deepSanitizeRequest(ExportTraceServiceRequest request) {
     ExportTraceServiceRequest.Builder reqBuilder = request.toBuilder();
