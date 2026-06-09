@@ -1,9 +1,9 @@
 grpc:
-  port: 4316
+  port: 5618
   maxInboundMessageSizeInKB: 16384
 
 insightFinder:
-  serverUrl: https://stg.insightfinder.com
+  serverUrl: https://app.insightfinder.com
   serverUri: /api/v1/customprojectrawdata
   checkAndCreateUri: /api/v1/check-and-add-custom-project
   promptUri: /api/v1/customprojectrawdata
@@ -11,14 +11,14 @@ insightFinder:
   promptSystemName:
 
 jaeger:
-  serverName: localhost
+  serverName: 172.31.56.88
   tlsEnabled: false
   grpcPort: 4317
   uiPort: 16686
 
 app:
   traceWorkerNum: 5
-  traceDelayInMillis: 10000
+  traceDelayInMillis: 60000
   enableTraceLog: true
   enablePromptLog: true
   tls:
@@ -49,8 +49,8 @@ data:
         - "tags.error"
     username:
       fieldPaths:
-        - "tags.username"
         - "tags.x-username"
+        - "tags.chat.username"
     session_id:
       fieldPaths:
         - "tags.x-session-id"
@@ -72,3 +72,73 @@ data:
     config:
       output_prompt:
         fieldPath: "tags.chat.response"
+
+sensitiveData:
+  sensitiveDataFilterEnabled: true
+  sensitiveDataRegex:
+    # Email — no keyword, full address is the sensitive value
+    - "(?i)\\b[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}\\b"
+    # US phone — no keyword, full number is the sensitive value
+    - "\\b(?:\\+?1[-.\\s]?)?(?:\\(\\d{3}\\)|\\d{3})[-.\\s]\\d{3}[-.\\s]\\d{4}\\b"
+    # SSN — context-aware: only mask the number when the SSN keyword is in the same sentence (before or after)
+    - "(?i)(?:ssn|social\\s+security\\s+(?:number|no\\.?|#)?)[^.\\n]{0,100}?(\\b\\d{3}[- ]\\d{2}[- ]\\d{4}\\b)"
+    - "(?i)(\\b\\d{3}[- ]\\d{2}[- ]\\d{4}\\b)[^.\\n]{0,100}?(?:ssn|social\\s+security\\s+(?:number|no\\.?|#)?)"
+    # Credit card — no keyword, full number is the sensitive value
+    - "\\b(?:\\d{4}[- ]){3}\\d{4}\\b"
+    # Street address — full match is the sensitive value (no capture group)
+    - "\\b\\d{1,5}\\s+(?:[NSEW]{1,2}\\s+)?(?:[A-Z][a-z0-9]+\\s+)*?(?:Street|St\\.?|Avenue|Ave\\.?|Road|Rd\\.?|Boulevard|Blvd\\.?|Drive|Dr\\.?|Lane|Ln\\.?|Way|Terrace|Terr\\.?)\\b(?=[^\\w]|$)"
+    # ZIP code — capture group keeps keyword, masks only the digits
+    - "(?:zip(?:code)?|postal code)[^\\d]{0,10}(\\d{5}(?:-\\d{4})?)"
+    # IPv4 — no capture groups, full IP replaced
+    - "(?<!\\d)(?<!\\d\\.)(?:(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)\\.){3}(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(?!\\.\\d)(?!\\d)"
+    # IPv6
+    - "\\b(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}\\b"
+    # MAC address
+    - "(?<![-\\w:])(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-F-a-f]{2}(?![-:\\w])"
+    # Date of Birth — capture group keeps keyword, masks only the date value
+    - "(?i)\\b(?:DOB|Date\\s+of\\s+Birth|Birth\\s+Date)(?:\\s+\\w+){0,3}?\\s*[:\\s-]*(\\d{1,2}[-/]\\d{1,2}[-/]\\d{4}|\\d{4}[-/]\\d{1,2}[-/]\\d{1,2}|\\d{1,2}[-/]\\d{1,2}[-/]\\d{2,4})\\b"
+    # Passport number — capture group masks only the number (keyword prefix is optional)
+    - "(?i)\\b(?:passport(?:\\s+number)?[:\\s]*)?([A-PR-WY][1-9]\\d{7})\\b"
+    # Medical Record Number — capture group keeps label, masks only the number
+    - "(?i)\\b(?:Medical\\s+Record\\s+Number|MRN)[:]?\\s{0,3}(\\d{6,10})\\b"
+    # ABA routing — capture group keeps label, masks only the 9-digit number
+    - "(?i)\\b(?:ABA(?:\\s+routing(?:\\s+number)?)?|routing(?:\\s+number|#)?|ACH\\s+Routing)(?:\\s+\\w+){0,3}?\\s*[:\\s-]*(\\d{9})\\b(?!\\d)"
+    # IBAN — full code is the sensitive value
+    - "\\b[A-Z]{2}\\d{2}[A-Z0-9]{18,30}\\b"
+    # SWIFT/BIC — full code is the sensitive value
+    - "\\b[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?\\b"
+    # Member/subscriber/policy ID — capture group keeps label, masks only the ID
+    - "(?i)\\b(?:member|subscriber|policy|group)\\s*(?:id|number|#)?(?:\\s+\\w+){0,3}?\\s*[:\\s-]*([A-Z]{1,4}[A-Z0-9-]{4,19})\\b"
+    # Prescription number — capture group keeps label, masks only the number
+    - "(?i)\\b(?:Rx|prescription)\\s*(?:number|#)?(?:\\s+\\w+){0,3}?\\s*[:\\s-]*(\\d{6,12})\\b"
+    # NINO — keyword required; "NINO" itself is never masked, only the value after it
+    - "(?i)\\b(?:National\\s+Insurance\\s+Number|NINO)[:\\s]{0,5}([A-CEGHJ-PR-TW-Z]{2}\\d{6}[A-D])\\b"
+    # SIN — keyword required; "SIN" itself is never masked, only the number after it
+    - "(?i)\\b(?:Social\\s+Insurance\\s+Number|SIN)[:\\s]{0,5}(\\d{3}-\\d{3}-\\d{3})\\b"
+    # Full name — capture group keeps keyword phrase, masks only the name
+    - "(?i)\\b(?:my name is|the patient's name is|client's name|full name:)[:\\s]+([A-Z][a-z]+(?:\\s[A-Z][a-z]'.?[A-Z]?[a-z]*)?\\s[A-Z][a-z'-]+)\\b"
+    # Username/handle — capture group keeps keyword, masks only the handle value
+    - "(?i)\\b(?:username|user name|screen name|handle is)[:\\s]+([A-Za-z0-9_.-]{3,20})\\b"
+    # International phone — no keyword, full number is the sensitive value
+    - "\\+(?:[0-9] ?){6,14}[0-9]\\b"
+    # Bank account — capture group keeps label, masks only the account number
+    - "(?i)\\b(?:bank\\s+account(?:\\s+number)?|account\\s+#|acct\\s+no)(?:\\s+\\w+){0,3}?\\s*[:\\s-]*(\\d{8,17})\\b"
+    # VIN — capture group keeps label, masks only the 17-char code
+    - "(?i)\\b(?:VIN|Vehicle\\s+Identification\\s+Number)(?:\\s+\\w+){0,3}?\\s*[:\\s-]*([A-HJ-NPR-Z0-9]{17})\\b"
+    # ICD-10 / CPT code — inner decimal group made non-capturing to avoid double-mask
+    - "(?i)\\b(?:ICD-10|CPT code|diagnosis code)(?:\\s+\\w+){0,3}?\\s*[:\\s-]*([A-Z]\\d{2}(?:\\.\\d{1,2})?)\\b"
+    # Diagnosis — capture group keeps keyword phrase, masks only the condition
+    - "(?i)\\b(?:my diagnosis is|i have|i was diagnosed with)[:\\s]*(cancer|diabetes|HIV|epilepsy|schizophrenia|bipolar disorder|multiple sclerosis)\\b"
+    # Password — capture group keeps keyword phrase, masks only the password value
+    - "(?i)\\b(?:my password is|the password is)[:\\s]+([^\\s]{6,})\\b"
+    # Coordinates — capture group keeps keyword, masks only the lat/long values
+    - "(?i)\\b(?:coordinates|lat/long)(?:\\s+\\w+){0,3}?\\s*[:\\s-]*(-?\\d{1,3}\\.\\d+,?\\s-?\\d{1,3}\\.\\d+)\\b"
+    # Student ID — capture group keeps label, masks only the number
+    - "(?i)\\b(?:student id|student number)(?:\\s+\\w+){0,3}?\\s*[:\\s-]*(\\d{6,12})\\b"
+    # Blood type — capture group includes the +/- sign; no trailing \b since +/- aren't word chars
+    - "(?i)\\b(?:my blood type is|blood type:)[:\\s]*((?:A|B|AB|O)[+-]?)(?=\\s|$|[,.])"
+    # Ethnicity/clan/tribe — capture group keeps keyword phrase, masks only the value
+    - "(?i)\\b(?:i am a member of this clan|my tribe is|my ethnicity is)[:\\s]*([A-Za-z\\s]{4,30})\\b"
+    # Voter ID — capture group keeps label, masks only the ID
+    - "(?i)\\b(?:voter id|voter registration number)(?:\\s+\\w+){0,3}?\\s*[:\\s-]*([A-Z0-9]{5,20})\\b"
+  replacement: "*"

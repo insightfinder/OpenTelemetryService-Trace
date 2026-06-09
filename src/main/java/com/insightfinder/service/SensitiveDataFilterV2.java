@@ -7,6 +7,8 @@ import io.opentelemetry.proto.common.v1.KeyValue;
 import io.opentelemetry.proto.trace.v1.ResourceSpans;
 import io.opentelemetry.proto.trace.v1.ScopeSpans;
 import io.opentelemetry.proto.trace.v1.Span;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -104,25 +106,39 @@ public class SensitiveDataFilterV2 {
     return sanitized;
   }
 
-  // Tries to match "keyword=value" or "keyword:value" and replace only the value part.
-  // Falls back to replacing whatever the raw pattern matches.
+  // When the pattern has capture groups, replaces only the captured portions (preserving
+  // keyword prefixes). When there are no capture groups, replaces the full match.
   private static String maskSensitiveValue(String text, String rawPattern, String replacement) {
     try {
-      Pattern withValue = Pattern.compile("(?i)(?:" + rawPattern + ")(\\s*[=:]\\s*)(\\S+)");
-      Matcher m = withValue.matcher(text);
-      if (m.find()) {
+      Pattern p = Pattern.compile(rawPattern);
+      Matcher m = p.matcher(text);
+      if (p.matcher("").groupCount() > 0) {
         StringBuffer sb = new StringBuffer();
-        m.reset();
         while (m.find()) {
-          int keywordEnd = m.start(1) - m.start();
-          m.appendReplacement(sb, Matcher.quoteReplacement(
-              m.group().substring(0, keywordEnd) + m.group(1) + replacement));
+          List<int[]> spans = new ArrayList<>();
+          for (int i = 1; i <= m.groupCount(); i++) {
+            if (m.group(i) != null) {
+              spans.add(new int[]{m.start(i) - m.start(), m.end(i) - m.start()});
+            }
+          }
+          spans.sort((a, b) -> b[0] - a[0]);
+          StringBuilder masked = new StringBuilder(m.group());
+          for (int[] span : spans) {
+            masked.replace(span[0], span[1], replacement);
+          }
+          m.appendReplacement(sb, Matcher.quoteReplacement(masked.toString()));
         }
         m.appendTail(sb);
         return sb.toString();
       }
+      StringBuffer sb = new StringBuffer();
+      while (m.find()) {
+        m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+      }
+      m.appendTail(sb);
+      return sb.toString();
     } catch (Exception ignored) {}
-    return text.replaceAll(rawPattern, replacement);
+    return text;
   }
 
 }
