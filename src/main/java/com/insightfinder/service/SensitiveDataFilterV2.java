@@ -8,6 +8,7 @@ import io.opentelemetry.proto.trace.v1.ResourceSpans;
 import io.opentelemetry.proto.trace.v1.ScopeSpans;
 import io.opentelemetry.proto.trace.v1.Span;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,12 +17,39 @@ public class SensitiveDataFilterV2 {
   private static final Config config = Config.getInstance();
   private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(SensitiveDataFilterV2.class);
 
+  // Simple keyword patterns matched against attribute key names only.
+  // Separate from the full value-masking patterns (which require keyword+value context).
+  private static final List<Pattern> SENSITIVE_KEY_PATTERNS = Arrays.asList(
+      Pattern.compile("(?i)ssn|social.?security"),
+      Pattern.compile("(?i)password|passwd|secret"),
+      Pattern.compile("(?i)dob|date.?of.?birth|birthdate"),
+      Pattern.compile("(?i)nino|national.?insurance"),
+      Pattern.compile("(?i)\\bsin\\b|social.?insurance"),
+      Pattern.compile("(?i)mrn|medical.?record"),
+      Pattern.compile("(?i)credit.?card|ccnum|cvv"),
+      Pattern.compile("(?i)passport"),
+      Pattern.compile("(?i)bank.?account|routing|\\biban\\b"),
+      Pattern.compile("(?i)\\bphone\\b|telephone|mobile"),
+      Pattern.compile("(?i)\\bemail\\b"),
+      Pattern.compile("(?i)\\baddress\\b|zipcode|postal"),
+      Pattern.compile("(?i)\\bvin\\b|vehicle.?id"),
+      Pattern.compile("(?i)blood.?type"),
+      Pattern.compile("(?i)voter.?id"),
+      Pattern.compile("(?i)student.?id|student.?num"),
+      Pattern.compile("(?i)coordinates|latitude|longitude"),
+      Pattern.compile("(?i)member.?id|subscriber|policy"),
+      Pattern.compile("(?i)prescription|\\brx\\b"),
+      Pattern.compile("(?i)diagnosis|\\bicd\\b|\\bcpt\\b"),
+      Pattern.compile("(?i)ethnicity|tribe|clan")
+  );
+
   static {
     LOG.info("SensitiveDataFilterV2 initialized with {} pattern(s), enabled={}",
         config.getSensitiveDataRegex().size(), config.isSensitiveDataFilterEnabled());
   }
 
   public static ExportTraceServiceRequest deepSanitizeRequest(ExportTraceServiceRequest request) {
+    if (!config.isSensitiveDataFilterEnabled()) return request;
     ExportTraceServiceRequest.Builder reqBuilder = request.toBuilder();
     reqBuilder.clearResourceSpans();
 
@@ -87,12 +115,8 @@ public class SensitiveDataFilterV2 {
 
   private static boolean isKeySensitive(String key) {
     if (key == null || key.isEmpty()) return false;
-    for (String pattern : config.getSensitiveDataRegex()) {
-      try {
-        if (Pattern.compile(pattern, Pattern.CASE_INSENSITIVE).matcher(key).find()) {
-          return true;
-        }
-      } catch (Exception ignored) {}
+    for (Pattern p : SENSITIVE_KEY_PATTERNS) {
+      if (p.matcher(key).find()) return true;
     }
     return false;
   }
@@ -137,7 +161,9 @@ public class SensitiveDataFilterV2 {
       }
       m.appendTail(sb);
       return sb.toString();
-    } catch (Exception ignored) {}
+    } catch (Exception e) {
+      LOG.warn("Pattern '{}' failed during masking, field left unmasked: {}", rawPattern, e.getMessage());
+    }
     return text;
   }
 

@@ -124,7 +124,9 @@ public class SensitiveDataFilter {
       }
       m.appendTail(sb);
       return sb.toString();
-    } catch (Exception ignored) {}
+    } catch (Exception e) {
+      LOG.warn("Pattern '{}' failed during masking, field left unmasked: {}", rawPattern, e.getMessage());
+    }
     return text;
   }
 
