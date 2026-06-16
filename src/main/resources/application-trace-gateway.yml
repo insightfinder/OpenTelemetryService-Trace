@@ -78,17 +78,27 @@ sensitiveData:
   sensitiveDataRegex:
     # Email — no keyword, full address is the sensitive value
     - "(?i)\\b[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}\\b"
-    # US phone — no keyword, full number is the sensitive value
-    - "\\b(?:\\+?1[-.\\s]?)?(?:\\(\\d{3}\\)|\\d{3})[-.\\s]\\d{3}[-.\\s]\\d{4}\\b"
-    # SSN — context-aware: only mask the number when the SSN keyword is in the same sentence (before or after)
-    - "(?i)(?:ssn|social\\s+security\\s+(?:number|no\\.?|#)?)[^.\\n]{0,100}?(\\b\\d{3}[- ]\\d{2}[- ]\\d{4}\\b)"
-    - "(?i)(\\b\\d{3}[- ]\\d{2}[- ]\\d{4}\\b)[^.\\n]{0,100}?(?:ssn|social\\s+security\\s+(?:number|no\\.?|#)?)"
-    # Credit card — no keyword, full number is the sensitive value
+    # US phone — no keyword, full number is the sensitive value (separators optional)
+    - "\\b(?:\\+?1[-.\\s]?)?(?:\\(\\d{3}\\)|\\d{3})[-.\\s]?\\d{3}[-.\\s]?\\d{4}\\b"
+    # SSN — standalone: 3-2-4 digit grouping is distinctive enough to mask without a keyword
+    - "\\b\\d{3}[,\\-\\.\\/\\_ ]\\d{2}[,\\-\\.\\/\\_ ]\\d{4}\\b"
+    # SSN — context-aware: preserves keyword prefix, masks only the number (keyword before or after)
+    - "(?i)(?:ssn|social\\s+security\\s+(?:number|no\\.?|#)?)[^.\\n]{0,100}?(\\b\\d{3}[,\\-\\.\\/\\_ ]\\d{2}[,\\-\\.\\/\\_ ]\\d{4}\\b)"
+    - "(?i)(\\b\\d{3}[,\\-\\.\\/ ]\\d{2}[,\\-\\.\\/ ]\\d{4}\\b)[^.\\n]{0,100}?(?:ssn|social\\s+security\\s+(?:number|no\\.?|#)?)"
+    # Credit card — standard 4-4-4-4 format, no keyword needed
     - "\\b(?:\\d{4}[- ]){3}\\d{4}\\b"
+    # Credit card — AMEX 4-6-5 format
+    - "\\b3[47]\\d{2}[\\s\\-]\\d{6}[\\s\\-]\\d{5}\\b"
+    # Credit card — Diners Club 4-6-4 format
+    - "\\b3(?:0[0-5]|[68]\\d)\\d[\\s\\-]\\d{6}[\\s\\-]\\d{4}\\b"
+    # Credit card — keyword-based catch-all for non-standard groupings
+    - "(?i)(?:credit\\s+card|card\\s+(?:number|no\\.?|#))[^\\d\\n]{0,20}(\\d[\\d \\-]{11,17}\\d)"
     # Street address — full match is the sensitive value (no capture group)
-    - "\\b\\d{1,5}\\s+(?:[NSEW]{1,2}\\s+)?(?:[A-Z][a-z0-9]+\\s+)*?(?:Street|St\\.?|Avenue|Ave\\.?|Road|Rd\\.?|Boulevard|Blvd\\.?|Drive|Dr\\.?|Lane|Ln\\.?|Way|Terrace|Terr\\.?)\\b(?=[^\\w]|$)"
+    - "\\b\\d{1,5}(?:-[A-Za-z0-9]+)?\\s+(?:[NSEW]{1,2}\\s+)?(?:[A-Z][a-z0-9]+\\s+)*?(?:Street|St\\.?|Avenue|Ave\\.?|Road|Rd\\.?|Boulevard|Blvd\\.?|Drive|Dr\\.?|Lane|Ln\\.?|Way|Terrace|Terr\\.?|Court|Ct\\.?|Place|Pl\\.?|Circle|Cir\\.?|Close|Highway|Hwy\\.?|Parkway|Pkwy\\.?|Square|Sq\\.?)\\b(?=[^\\w]|$)"
     # ZIP code — capture group keeps keyword, masks only the digits
-    - "(?:zip(?:code)?|postal code)[^\\d]{0,10}(\\d{5}(?:-\\d{4})?)"
+    - "(?i)(?:zip(?:\\s*code)?|post(?:al)?\\s*code)[^\\d]{0,30}(\\d{5}(?:-\\d{4})?)"
+    # ZIP code — standalone at end of address (state abbreviation + ZIP, no keyword needed)
+    - "\\b[A-Z]{2}\\s+(\\d{5}(?:-\\d{4})?)\\b"
     # IPv4 — no capture groups, full IP replaced
     - "(?<!\\d)(?<!\\d\\.)(?:(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)\\.){3}(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(?!\\.\\d)(?!\\d)"
     # IPv6
@@ -96,11 +106,11 @@ sensitiveData:
     # MAC address
     - "(?<![-\\w:])(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-F-a-f]{2}(?![-:\\w])"
     # Date of Birth — capture group keeps keyword, masks only the date value
-    - "(?i)\\b(?:DOB|Date\\s+of\\s+Birth|Birth\\s+Date)(?:\\s+\\w+){0,3}?\\s*[:\\s-]*(\\d{1,2}[-/]\\d{1,2}[-/]\\d{4}|\\d{4}[-/]\\d{1,2}[-/]\\d{1,2}|\\d{1,2}[-/]\\d{1,2}[-/]\\d{2,4})\\b"
+    - "(?i)\\b(?:DOB|Date\\s+of\\s+Birth|Birth(?:\\s+Date)?|Birthday|Born(?:\\s+on)?)(?:\\s+\\w+){0,3}?\\s*[:\\s-]*(\\d{1,2}[-/.]\\d{1,2}[-/.]\\d{4}|\\d{4}[-/.]\\d{1,2}[-/.]\\d{1,2}|\\d{1,2}[-/.]\\d{1,2}[-/.]\\d{2,4}|(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\\s+\\d{1,2},?\\s+\\d{4})\\b"
     # Passport number — keyword required; capture group masks only the number
-    - "(?i)\\b(?:passport(?:\\s+number)?)[:\\s]+([A-PR-WY][1-9]\\d{7})\\b"
+    - "(?i)\\b(?:passport(?:\\s+(?:number|no\\.?|#)?)?)[^\\n]{0,25}?([A-Z][0-9]\\d{6,7})\\b"
     # Medical Record Number — capture group keeps label, masks only the number
-    - "(?i)\\b(?:Medical\\s+Record\\s+Number|MRN)[:]?\\s{0,3}(\\d{6,10})\\b"
+    - "(?i)\\b(?:Medical\\s+Record\\s+Number|MRN)[^\\d\\n]{0,30}?(\\d{6,10})\\b"
     # ABA routing — capture group keeps label, masks only the 9-digit number
     - "(?i)\\b(?:ABA(?:\\s+routing(?:\\s+number)?)?|routing(?:\\s+number|#)?|ACH\\s+Routing)(?:\\s+\\w+){0,3}?\\s*[:\\s-]*(\\d{9})\\b(?!\\d)"
     # IBAN — full code is the sensitive value
@@ -111,16 +121,16 @@ sensitiveData:
     - "(?i)\\b(?:member|subscriber|policy|group)\\s*(?:id|number|#)?(?:\\s+\\w+){0,3}?\\s*[:\\s-]*([A-Z]{1,4}[A-Z0-9-]{4,19})\\b"
     # Prescription number — capture group keeps label, masks only the number
     - "(?i)\\b(?:Rx|prescription)\\s*(?:number|#)?(?:\\s+\\w+){0,3}?\\s*[:\\s-]*(\\d{6,12})\\b"
-    # NINO — keyword required; "NINO" itself is never masked, only the value after it
-    - "(?i)\\b(?:National\\s+Insurance\\s+Number|NINO)[:\\s]{0,5}([A-CEGHJ-PR-TW-Z]{2}\\d{6}[A-D])\\b"
-    # SIN — keyword required; "SIN" itself is never masked, only the number after it
-    - "(?i)\\b(?:Social\\s+Insurance\\s+Number|SIN)[:\\s]{0,5}(\\d{3}-\\d{3}-\\d{3})\\b"
+    # NINO — keyword required; "NINO" itself is never masked, only the value after it (spaces within number allowed)
+    - "(?i)\\b(?:National\\s+Insurance\\s+Number|NINO)[^\\n]{0,10}?([A-CEGHJ-PR-TW-Z]{2}\\s?\\d{2}\\s?\\d{2}\\s?\\d{2}\\s?[A-D])\\b"
+    # SIN — keyword required; "SIN" itself is never masked, only the number after it (hyphens, spaces, or no delimiter)
+    - "(?i)\\b(?:Social\\s+Insurance\\s+Number|SIN)[^\\d\\n]{0,25}?(\\d{3}[-\\s]?\\d{3}[-\\s]?\\d{3})\\b"
     # Full name — capture group keeps keyword phrase, masks only the name
-    - "(?i)\\b(?:my name is|the patient's name is|client's name|full name:)[:\\s]+([A-Z][a-z]+(?:\\s[A-Z][a-z]'.?[A-Z]?[a-z]*)?\\s[A-Z][a-z'-]+)\\b"
+    - "(?i)\\b(?:my name is|the patient's name is|client's name|full name:|full name)[:\\s]+([A-Z][a-z]+(?:\\s[A-Z][a-z]'.?[A-Z]?[a-z]*)?\\s[A-Z][a-z'-]+)\\b"
     # Username/handle — capture group keeps keyword, masks only the handle value
-    - "(?i)\\b(?:username|user name|screen name|handle is)[:\\s]+([A-Za-z0-9_.-]{3,20})\\b"
-    # International phone — no keyword, full number is the sensitive value
-    - "\\+(?:[0-9] ?){6,14}[0-9]\\b"
+    - "(?i)\\b(?:username|user name|screen name|handle is|username is)[:\\s]+([A-Za-z0-9_.-]{3,20})\\b"
+    # International phone — no keyword, full number is the sensitive value (spaces, hyphens, or dots as separators)
+    - "\\+(?:[0-9][.\\-\\s]?){6,14}[0-9]\\b"
     # Bank account — capture group keeps label, masks only the account number
     - "(?i)\\b(?:bank\\s+account(?:\\s+number)?|account\\s+#|acct\\s+no)(?:\\s+\\w+){0,3}?\\s*[:\\s-]*(\\d{8,17})\\b"
     # VIN — capture group keeps label, masks only the 17-char code
@@ -140,5 +150,5 @@ sensitiveData:
     # Ethnicity/clan/tribe — capture group keeps keyword phrase, masks only the value
     - "(?i)\\b(?:i am a member of this clan|my tribe is|my ethnicity is)[:\\s]*([A-Za-z\\s]{4,30})\\b"
     # Voter ID — capture group keeps label, masks only the ID
-    - "(?i)\\b(?:voter id|voter registration number)(?:\\s+\\w+){0,3}?\\s*[:\\s-]*([A-Z0-9]{5,20})\\b"
+    - "(?i)\\b(?:voter id|voter registration number)(?:\\s+\\w+){0,3}?\\s*[:\\s-]*((?=[A-Z0-9]*\\d)[A-Z0-9]{5,20})\\b"
   replacement: "*"

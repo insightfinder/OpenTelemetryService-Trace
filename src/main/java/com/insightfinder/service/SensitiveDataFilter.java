@@ -111,7 +111,7 @@ public class SensitiveDataFilter {
           spans.sort((a, b) -> b[0] - a[0]);
           StringBuilder masked = new StringBuilder(m.group());
           for (int[] span : spans) {
-            masked.replace(span[0], span[1], replacement);
+            masked.replace(span[0], span[1], "*".repeat(span[1] - span[0]));
           }
           m.appendReplacement(sb, Matcher.quoteReplacement(masked.toString()));
         }
@@ -120,7 +120,7 @@ public class SensitiveDataFilter {
       }
       StringBuffer sb = new StringBuffer();
       while (m.find()) {
-        m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+        m.appendReplacement(sb, Matcher.quoteReplacement("*".repeat(m.group().length())));
       }
       m.appendTail(sb);
       return sb.toString();

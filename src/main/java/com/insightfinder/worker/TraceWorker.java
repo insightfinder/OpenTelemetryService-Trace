@@ -116,10 +116,26 @@ public class TraceWorker implements Runnable {
       int promptTokens = TokenizerUtil.splitByWhiteSpaceTokenizer(safeInput);
       int responseTokens = TokenizerUtil.splitByWhiteSpaceTokenizer(safeOutput);
 
+      InputPrompt safeInputPrompt = new InputPrompt(safeInput, promptTokens);
+      safeInputPrompt.setSpanId(cd.getInputPrompt().getSpanId());
+      safeInputPrompt.setStartTime(cd.getInputPrompt().getStartTime());
+      safeInputPrompt.setDuration(cd.getInputPrompt().getDuration());
+
+      ResponseRecord safeResponseRecord = new ResponseRecord(safeOutput, responseTokens);
+      safeResponseRecord.setSpanId(cd.getResponseRecord().getSpanId());
+      safeResponseRecord.setStartTime(cd.getResponseRecord().getStartTime());
+      safeResponseRecord.setDuration(cd.getResponseRecord().getDuration());
+
       sanitized.add(ContentData.builder()
-          .inputPrompt(new InputPrompt(safeInput, promptTokens))
-          .responseRecord(new ResponseRecord(safeOutput, responseTokens))
-          .build());
+              .inputPrompt(safeInputPrompt)
+              .responseRecord(safeResponseRecord)
+              .traceId(cd.getTraceId())
+              .username(cd.getUsername())
+              .instanceName(cd.getInstanceName())
+              .entryOperation(cd.getEntryOperation())
+              .sessionId(cd.getSessionId())
+              .traceStartTimestamp(cd.getTraceStartTimestamp())
+              .build());
     }
     return sanitized;
   }
