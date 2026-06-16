@@ -1,71 +1,70 @@
 grpc:
-  port: 4317
+  port: 4618
   maxInboundMessageSizeInKB: 16384
-
 insightFinder:
   serverUrl: https://stg.insightfinder.com
   serverUri: /api/v1/customprojectrawdata
   checkAndCreateUri: /api/v1/check-and-add-custom-project
   promptUri: /api/v1/customprojectrawdata
-  promptProjectName:
-  promptSystemName:
-
+  promptProjectName: ""
+  promptSystemName: ""
+  connectTimeout: 10
+  readTimeout: 15
+  writeTimeout: 15
 jaeger:
-  serverName: 18.212.200.99
+  serverName: 172.31.56.88
   tlsEnabled: false
   grpcPort: 4317
   uiPort: 16686
-
+  connectTimeout: 10
+  readTimeout: 15
+  writeTimeout: 15
 app:
-  traceWorkerNum: 5
-  traceDelayInMillis: 60000
-  enableTraceLog: true
-  enablePromptLog: true
+  traceWorkerNum: 8
+  traceDelayInMillis: 10000
+  enableTraceLog: false
+  enablePromptLog: false
   tls:
     enabled: false
-    # Path to full-chain certificate file (PEM)
     certificateFile: ""
-    # Path to the private key file.
     privateKeyFile: ""
-
 data:
-  useCustomTokenizer: true
   overwriteTraceAndSpanIdByUUID: true
   overwriteUUIDPath: "tags.chat.id"
   overwriteTimestamp: true
   overwriteTimestampPath: "tags.x-timestamp"
-  attrMapping: # expect the field is in tags
+  useCustomTokenizer: true
+  attrMapping:
     prompt_response:
       fieldPaths:
-        - "tags.recommendations prompt"
+        - "tags.iftracer.entity.output"      # changed from tags.gen_ai.completion.0.content
     prompt_token:
       fieldPaths:
-        - "tags.prompt_token_usage"
-        - "tags.token_usage"
+        - "tags.gen_ai.usage.input_tokens"
     response_token:
       fieldPaths:
-        - "tags.output_token_usage"
+        - "tags.gen_ai.usage.output_tokens"
     error:
       fieldPaths:
         - "tags.error_messages"
     username:
       fieldPaths:
+        - "tags.chat.username"
         - "tags.username"
     session_id:
       fieldPaths:
-        - "tags.x-session-id"
+        - "tags.uuid"
   promptExtraction:
-    processPath: "traceloop.entity.name"
+    processPath: "tags.iftracer.entity.name"
     processNames:
-      - "RunnableSequence.workflow"
-      - "RunnableWithMessageHistory.workflow"
+      - "generate_answer"
     promptConfig:
       input_prompt:
-        fieldPath: "tags.traceloop.entity.input"
-        valuePath: "inputs"
+        fieldPath: "tags.gen_ai.prompt.0.content"
+        valuePath: ""
       output_prompt:
-        fieldPath: "tags.traceloop.entity.output"
-        valuePath: "outputs"
+        fieldPath: "tags.iftracer.entity.output"   # changed from tags.gen_ai.completion.0.content
+        valuePath: ""
   unsuccessResponseExtraction:
     processPath: "tags.iftracer.entity.name"
     processNames:
@@ -73,10 +72,9 @@ data:
       - "generate_answer_with_context"
     config:
       output_prompt:
-        fieldPath: "tags.iftracer.entity.output"
-
+        fieldPath: "iftracer.entity.output"
 sensitiveData:
-  sensitiveDataFilterEnabled: true
+  sensitiveDataFilterEnabled: false
   sensitiveDataRegex:
-  - 'SELECT'
+    - 'SELECT'
   replacement: ""

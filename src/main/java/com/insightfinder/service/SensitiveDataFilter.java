@@ -5,6 +5,7 @@ import com.insightfinder.config.model.SensitiveDataConfig;
 import com.insightfinder.util.regex.JsonStructure;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import org.slf4j.Logger;
@@ -87,9 +88,46 @@ public class SensitiveDataFilter {
     }
 
     for (Pattern p : regexRules) {
-      result = p.matcher(result).replaceAll(replacement);
+      result = maskSensitiveValue(result, p.pattern(), replacement);
     }
     return result;
+  }
+
+  // When the pattern has capture groups, replaces only the captured portions (preserving
+  // keyword prefixes). When there are no capture groups, replaces the full match.
+  private static String maskSensitiveValue(String text, String rawPattern, String replacement) {
+    try {
+      Pattern p = Pattern.compile(rawPattern);
+      Matcher m = p.matcher(text);
+      if (p.matcher("").groupCount() > 0) {
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+          List<int[]> spans = new ArrayList<>();
+          for (int i = 1; i <= m.groupCount(); i++) {
+            if (m.group(i) != null) {
+              spans.add(new int[]{m.start(i) - m.start(), m.end(i) - m.start()});
+            }
+          }
+          spans.sort((a, b) -> b[0] - a[0]);
+          StringBuilder masked = new StringBuilder(m.group());
+          for (int[] span : spans) {
+            masked.replace(span[0], span[1], "*".repeat(span[1] - span[0]));
+          }
+          m.appendReplacement(sb, Matcher.quoteReplacement(masked.toString()));
+        }
+        m.appendTail(sb);
+        return sb.toString();
+      }
+      StringBuffer sb = new StringBuffer();
+      while (m.find()) {
+        m.appendReplacement(sb, Matcher.quoteReplacement("*".repeat(m.group().length())));
+      }
+      m.appendTail(sb);
+      return sb.toString();
+    } catch (Exception e) {
+      LOG.warn("Pattern '{}' failed during masking, field left unmasked: {}", rawPattern, e.getMessage());
+    }
+    return text;
   }
 
   public static String filterString(String content, SensitiveDataFilter filter) {
