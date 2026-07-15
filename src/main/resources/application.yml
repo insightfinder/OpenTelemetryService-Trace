@@ -33,7 +33,7 @@ data:
   overwriteUUIDPath: "tags.chat.id"
   overwriteTimestamp: true
   overwriteTimestampPath: "tags.x-timestamp"
-  useCustomTokenizer: true
+  useCustomTokenizer: false
   attrMapping:
     prompt_response:
       fieldPaths:
