@@ -13,7 +13,6 @@ import com.insightfinder.service.InsightFinderService;
 import com.insightfinder.service.JaegerService;
 import com.insightfinder.service.SensitiveDataFilter;
 import com.insightfinder.service.UniqueDelayQueueManager;
-import com.insightfinder.util.TokenizerUtil;
 import io.opentelemetry.api.internal.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
@@ -113,8 +112,8 @@ public class TraceWorker implements Runnable {
       String safeInput = SensitiveDataFilter.filterString(input, sensitiveDataFilter);
       String safeOutput = SensitiveDataFilter.filterString(output, sensitiveDataFilter);
 
-      int promptTokens = TokenizerUtil.splitByWhiteSpaceTokenizer(safeInput);
-      int responseTokens = TokenizerUtil.splitByWhiteSpaceTokenizer(safeOutput);
+      int promptTokens = cd.getInputPrompt().getTokenCount();
+      int responseTokens = cd.getResponseRecord().getTokenCount();
 
       InputPrompt safeInputPrompt = new InputPrompt(safeInput, promptTokens);
       safeInputPrompt.setSpanId(cd.getInputPrompt().getSpanId());
