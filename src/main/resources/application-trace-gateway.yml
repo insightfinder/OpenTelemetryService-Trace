@@ -29,7 +29,7 @@ app:
     privateKeyFile: ""
 
 data:
-  useCustomTokenizer: true
+  useCustomTokenizer: false
   overwriteTraceAndSpanIdByUUID: true
   overwriteUUIDPath: "tags.chat.id"
   overwriteTimestamp: true
