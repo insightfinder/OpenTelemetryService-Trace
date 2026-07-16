@@ -422,12 +422,20 @@ public class TraceDataMapper {
     var outputPrompt = extractPrompt(outputPromptMapping, attributes);
     if (!StringUtils.isNullOrEmpty(inputPrompt) && !StringUtils.isNullOrEmpty(outputPrompt)) {
       if (config.useCustomTokenizer()) {
-        int promptTokens = TokenizerUtil.splitByWhiteSpaceTokenizer(inputPrompt);
-        int responseTokens = TokenizerUtil.splitByWhiteSpaceTokenizer(outputPrompt);
-        int totalTokens = promptTokens + responseTokens;
-        attributes.put("total_tokens", totalTokens);
-        attributes.put("prompt_tokens", promptTokens);
-        attributes.put("response_tokens", responseTokens);
+        Object existingPromptTokens = attributes.get("prompt_tokens");
+        if (existingPromptTokens == null || Integer.valueOf(0).equals(existingPromptTokens)) {
+          attributes.put("prompt_tokens", TokenizerUtil.splitByWhiteSpaceTokenizer(inputPrompt));
+        }
+        Object existingResponseTokens = attributes.get("response_tokens");
+        if (existingResponseTokens == null || Integer.valueOf(0).equals(existingResponseTokens)) {
+          attributes.put("response_tokens", TokenizerUtil.splitByWhiteSpaceTokenizer(outputPrompt));
+        }
+        Object existingTotalTokens = attributes.get("total_tokens");
+        if (existingTotalTokens == null || Integer.valueOf(0).equals(existingTotalTokens)) {
+          int promptTokens = (Integer) attributes.get("prompt_tokens");
+          int responseTokens = (Integer) attributes.get("response_tokens");
+          attributes.put("total_tokens", promptTokens + responseTokens);
+        }
       }
       int promptTokens = (Integer) attributes.getOrDefault("prompt_tokens",
           TokenizerUtil.splitByWhiteSpaceTokenizer(inputPrompt));
