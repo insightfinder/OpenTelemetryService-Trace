@@ -167,6 +167,17 @@ public class TraceDataMapper {
     var rawAttributes = rawSpanData.getJSONArray("tags");
     var attributes = ParseUtil.getAttrMapFromJsonArray(rawAttributes);
 
+    if (attributes.containsKey("chat.prompt_tokens") || attributes.containsKey("prompt_tokens")) {
+      Object rawPromptTokens = attributes.get("prompt_tokens");
+      Object rawChatPromptTokens = attributes.get("chat.prompt_tokens");
+      log.info(
+          "[TokenDebugOtelTrace] getSpanDataBody operationName={} useCustomTokenizer={} "
+              + "prompt_tokens={} (type={}) chat.prompt_tokens={} (type={})",
+          rawSpanData.getString("operationName"), config.useCustomTokenizer(),
+          rawPromptTokens, rawPromptTokens == null ? "null" : rawPromptTokens.getClass().getName(),
+          rawChatPromptTokens, rawChatPromptTokens == null ? "null" : rawChatPromptTokens.getClass().getName());
+    }
+
     // Remove sensitive attributes
     removeSensitiveAttributes(attributes);
 

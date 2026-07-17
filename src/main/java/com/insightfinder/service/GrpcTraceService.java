@@ -10,6 +10,8 @@ import io.grpc.stub.StreamObserver;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceResponse;
 import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc;
+import io.opentelemetry.proto.common.v1.AnyValue;
+import io.opentelemetry.proto.common.v1.KeyValue;
 import io.opentelemetry.proto.trace.v1.ResourceSpans;
 import io.opentelemetry.proto.trace.v1.ScopeSpans;
 import io.opentelemetry.proto.trace.v1.Span;
@@ -25,6 +27,7 @@ public class GrpcTraceService extends TraceServiceGrpc.TraceServiceImplBase {
   @Override
   public void export(ExportTraceServiceRequest request,
       StreamObserver<ExportTraceServiceResponse> responseObserver) {
+    logIncomingTokenAttributes(request);
     request = SensitiveDataFilterV2.deepSanitizeRequest(request);
 
     // Extract trace data body and add data to the queue
@@ -39,6 +42,34 @@ public class GrpcTraceService extends TraceServiceGrpc.TraceServiceImplBase {
     ExportTraceServiceResponse response = ExportTraceServiceResponse.newBuilder().build();
     responseObserver.onNext(response);
     responseObserver.onCompleted();
+  }
+
+  private void logIncomingTokenAttributes(ExportTraceServiceRequest request) {
+    for (ResourceSpans resourceSpans : request.getResourceSpansList()) {
+      for (ScopeSpans scopeSpans : resourceSpans.getScopeSpansList()) {
+        for (Span span : scopeSpans.getSpansList()) {
+          for (KeyValue kv : span.getAttributesList()) {
+            if (kv.getKey().equals("prompt_tokens") || kv.getKey().equals("chat.prompt_tokens")
+                || kv.getKey().equals("response_tokens") || kv.getKey().equals("chat.completion_tokens")) {
+              log.info(
+                  "[TokenDebugOtelTrace] GrpcTraceService.export (pre-sanitize) operationName={} key={} "
+                      + "valueCase={} value={}",
+                  span.getName(), kv.getKey(), kv.getValue().getValueCase(), describeAnyValue(kv.getValue()));
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private String describeAnyValue(AnyValue value) {
+    return switch (value.getValueCase()) {
+      case STRING_VALUE -> "STRING:" + value.getStringValue();
+      case INT_VALUE -> "INT:" + value.getIntValue();
+      case DOUBLE_VALUE -> "DOUBLE:" + value.getDoubleValue();
+      case BOOL_VALUE -> "BOOL:" + value.getBoolValue();
+      default -> "OTHER:" + value.getValueCase() + ":" + value;
+    };
   }
 
   private void exportSpanData(ExportTraceServiceRequest request) {
