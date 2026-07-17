@@ -332,15 +332,31 @@ public class TraceDataMapper {
         totalTokens += responseTokens;
       }
     }
-    if (totalTokens != null) {
+    Object existingPromptTokens = attributes.get("prompt_tokens");
+    Object existingResponseTokens = attributes.get("response_tokens");
+    Object existingTotalTokens = attributes.get("total_tokens");
+    log.info(
+        "[TokenDebugOtelTrace] extractTokens BEFORE existingPromptTokens={} existingResponseTokens={} "
+            + "existingTotalTokens={} computedPromptTokens={} computedResponseTokens={} computedTotalTokens={}",
+        existingPromptTokens, existingResponseTokens, existingTotalTokens, promptTokens, responseTokens,
+        totalTokens);
+    boolean promptTokensAlreadyValid =
+        existingPromptTokens != null && !Integer.valueOf(0).equals(existingPromptTokens);
+    boolean responseTokensAlreadyValid =
+        existingResponseTokens != null && !Integer.valueOf(0).equals(existingResponseTokens);
+    boolean totalTokensAlreadyValid =
+        existingTotalTokens != null && !Integer.valueOf(0).equals(existingTotalTokens);
+    if (totalTokens != null && !totalTokensAlreadyValid) {
       attributes.put("total_tokens", totalTokens);
     }
-    if (promptTokens != null) {
+    if (promptTokens != null && !promptTokensAlreadyValid) {
       attributes.put("prompt_tokens", promptTokens);
     }
-    if (responseTokens != null) {
+    if (responseTokens != null && !responseTokensAlreadyValid) {
       attributes.put("response_tokens", responseTokens);
     }
+    log.info("[TokenDebugOtelTrace] extractTokens AFTER prompt_tokens={} response_tokens={} total_tokens={}",
+        attributes.get("prompt_tokens"), attributes.get("response_tokens"), attributes.get("total_tokens"));
   }
 
   private void extractErrorFlag(Map<String, Object> attributes,
@@ -421,6 +437,11 @@ public class TraceDataMapper {
     var inputPrompt = extractPrompt(inputPromptMapping, attributes);
     var outputPrompt = extractPrompt(outputPromptMapping, attributes);
     if (!StringUtils.isNullOrEmpty(inputPrompt) && !StringUtils.isNullOrEmpty(outputPrompt)) {
+      log.info(
+          "[TokenDebugOtelTrace] extractPromptPair BEFORE prompt_tokens={} response_tokens={} "
+              + "total_tokens={} useCustomTokenizer={}",
+          attributes.get("prompt_tokens"), attributes.get("response_tokens"), attributes.get("total_tokens"),
+          config.useCustomTokenizer());
       if (config.useCustomTokenizer()) {
         Object existingPromptTokens = attributes.get("prompt_tokens");
         if (existingPromptTokens == null || Integer.valueOf(0).equals(existingPromptTokens)) {
@@ -432,15 +453,22 @@ public class TraceDataMapper {
         }
         Object existingTotalTokens = attributes.get("total_tokens");
         if (existingTotalTokens == null || Integer.valueOf(0).equals(existingTotalTokens)) {
-          int promptTokens = (Integer) attributes.get("prompt_tokens");
-          int responseTokens = (Integer) attributes.get("response_tokens");
-          attributes.put("total_tokens", promptTokens + responseTokens);
+          Integer promptTokensForTotal = parseTokenCount(attributes.get("prompt_tokens"));
+          Integer responseTokensForTotal = parseTokenCount(attributes.get("response_tokens"));
+          attributes.put("total_tokens",
+              (promptTokensForTotal == null ? 0 : promptTokensForTotal)
+                  + (responseTokensForTotal == null ? 0 : responseTokensForTotal));
         }
       }
-      int promptTokens = (Integer) attributes.getOrDefault("prompt_tokens",
-          TokenizerUtil.splitByWhiteSpaceTokenizer(inputPrompt));
-      int responseTokens = (Integer) attributes.getOrDefault("response_tokens",
-          TokenizerUtil.splitByWhiteSpaceTokenizer(outputPrompt));
+      Integer parsedPromptTokens = parseTokenCount(attributes.get("prompt_tokens"));
+      int promptTokens = parsedPromptTokens != null ? parsedPromptTokens
+          : TokenizerUtil.splitByWhiteSpaceTokenizer(inputPrompt);
+      Integer parsedResponseTokens = parseTokenCount(attributes.get("response_tokens"));
+      int responseTokens = parsedResponseTokens != null ? parsedResponseTokens
+          : TokenizerUtil.splitByWhiteSpaceTokenizer(outputPrompt);
+      log.info(
+          "[TokenDebugOtelTrace] extractPromptPair AFTER prompt_tokens={} response_tokens={} total_tokens={}",
+          attributes.get("prompt_tokens"), attributes.get("response_tokens"), attributes.get("total_tokens"));
       return ContentData.builder()
           .inputPrompt(new InputPrompt(inputPrompt, promptTokens))
           .responseRecord(new ResponseRecord(outputPrompt, responseTokens))
@@ -448,6 +476,15 @@ public class TraceDataMapper {
     } else {
       return null;
     }
+  }
+
+  private Integer parseTokenCount(Object rawValue) {
+    if (rawValue instanceof String) {
+      return Integer.parseInt((String) rawValue);
+    } else if (rawValue instanceof Integer) {
+      return (Integer) rawValue;
+    }
+    return null;
   }
 
   private String extractPrompt(PromptConfig promptConfig, Map<String, Object> attributes) {
