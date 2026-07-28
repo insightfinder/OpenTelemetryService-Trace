@@ -46,7 +46,10 @@ public class TraceDataBodyTest {
     expectedChildSpans.put("c3", List.of(childSpan4));
     assertThat(trace.getSpans()).containsExactlyEntriesOf(expectedSpan);
     assertThat(trace.getChildSpans()).containsExactlyEntriesOf(expectedChildSpans);
-    assertThat(trace.getTotalToken()).isEqualTo(38);
+    // Only root spans (r1=7, r2=7) contribute to the trace total now — child spans no longer
+    // count, since they can carry an already-summed value duplicated from their root (the bug
+    // this method fixes for multi-agent turns, where a child agent span repeats the root's total).
+    assertThat(trace.getTotalToken()).isEqualTo(14);
   }
 
   @Test

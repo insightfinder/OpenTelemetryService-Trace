@@ -43,12 +43,15 @@ public class TraceDataBody {
   private transient Map<String, List<SpanDataBody>> childSpans = new HashMap<>(); // parentSpanId -> childSpans
 
   public void addSpan(SpanDataBody span) {
-    var spanTotalTokens = span.getTotalTokens();
-    if (spanTotalTokens != null) {
-      totalToken += spanTotalTokens;
-    }
     var parentSpanId = span.getParentSpanId();
     if (StringUtils.isNullOrEmpty(parentSpanId)) {
+      // Only root spans contribute to the trace's total — child spans (e.g. per-agent spans in
+      // multi-agent turns) can carry the same already-summed token count propagated from the
+      // root, and counting them too double-counts a single real turn's tokens.
+      var spanTotalTokens = span.getTotalTokens();
+      if (spanTotalTokens != null) {
+        totalToken += spanTotalTokens;
+      }
       spans.put(span.getSpanID(), span);
     } else {
       var childSpans = this.childSpans.getOrDefault(parentSpanId, new ArrayList<>());
