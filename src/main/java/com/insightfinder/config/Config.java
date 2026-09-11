@@ -5,6 +5,7 @@ import com.insightfinder.config.model.AppConfig.TLS;
 import com.insightfinder.config.model.ConfigModel;
 import com.insightfinder.config.model.DataConfig;
 import com.insightfinder.config.model.GrpcConfig;
+import com.insightfinder.config.model.HttpConfig;
 import com.insightfinder.config.model.InsightFinderConfig;
 import com.insightfinder.config.model.JaegerConfig;
 import com.insightfinder.config.model.PromptExtractionConfig;
@@ -91,6 +92,10 @@ public class Config {
     return configModel.getGrpc();
   }
 
+  private HttpConfig getHttpConfig() {
+    return configModel.getHttp();
+  }
+
   private InsightFinderConfig getIFConfig() {
     return configModel.getInsightFinder();
   }
@@ -133,6 +138,18 @@ public class Config {
 
   public int getGrpcMaxInboundMessageSizeInKB() {
     int maxInboundMessageSizeInKB = getGrpcConfig().getMaxInboundMessageSizeInKB();
+    if (maxInboundMessageSizeInKB == 0) {
+      maxInboundMessageSizeInKB = 16 * 1024;
+    }
+    return maxInboundMessageSizeInKB;
+  }
+
+  public int getHttpPort() {
+    return getHttpConfig().getPort();
+  }
+
+  public int getHttpMaxInboundMessageSizeInKB() {
+    int maxInboundMessageSizeInKB = getHttpConfig().getMaxInboundMessageSizeInKB();
     if (maxInboundMessageSizeInKB == 0) {
       maxInboundMessageSizeInKB = 16 * 1024;
     }

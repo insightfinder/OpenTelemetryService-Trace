@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.google.protobuf.ByteString;
 import com.insightfinder.config.model.ValueMapping;
 import io.grpc.Metadata;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.opentelemetry.api.internal.StringUtils;
 import io.opentelemetry.proto.common.v1.KeyValue;
 import java.util.HashMap;
@@ -38,6 +39,26 @@ public class ParseUtil {
 
   public static String getSystemFromMedata(Metadata metadata) {
     return metadata.get(Metadata.Key.of("ifsystem", Metadata.ASCII_STRING_MARSHALLER));
+  }
+
+  public static String getIfUserFromHttpHeaders(HttpHeaders headers) {
+    return headers.get("ifuser");
+  }
+
+  public static String getLicenseKeyFromHttpHeaders(HttpHeaders headers) {
+    var result = headers.get("iflicenseKey");
+    if (StringUtils.isNullOrEmpty(result)) {
+      result = headers.get("iflicensekey");
+    }
+    return result;
+  }
+
+  public static String getProjectFromHttpHeaders(HttpHeaders headers) {
+    return headers.get("ifproject");
+  }
+
+  public static String getSystemFromHttpHeaders(HttpHeaders headers) {
+    return headers.get("ifsystem");
   }
 
   public static Map<String, Object> getAttrMapFromJsonArray(JSONArray attrMap) {
