@@ -92,8 +92,15 @@ public class Config {
     return configModel.getGrpc();
   }
 
+  private static final int DEFAULT_HTTP_PORT = 4619;
+
   private HttpConfig getHttpConfig() {
-    return configModel.getHttp();
+    HttpConfig httpConfig = configModel.getHttp();
+    if (httpConfig == null) {
+      log.info("No 'http' config section found. Falling back to default HTTP port {}.", DEFAULT_HTTP_PORT);
+      httpConfig = new HttpConfig(DEFAULT_HTTP_PORT, 0);
+    }
+    return httpConfig;
   }
 
   private InsightFinderConfig getIFConfig() {
