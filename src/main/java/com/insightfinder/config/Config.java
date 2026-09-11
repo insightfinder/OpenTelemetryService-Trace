@@ -5,6 +5,7 @@ import com.insightfinder.config.model.AppConfig.TLS;
 import com.insightfinder.config.model.ConfigModel;
 import com.insightfinder.config.model.DataConfig;
 import com.insightfinder.config.model.GrpcConfig;
+import com.insightfinder.config.model.HttpConfig;
 import com.insightfinder.config.model.InsightFinderConfig;
 import com.insightfinder.config.model.JaegerConfig;
 import com.insightfinder.config.model.PromptExtractionConfig;
@@ -91,6 +92,17 @@ public class Config {
     return configModel.getGrpc();
   }
 
+  private static final int DEFAULT_HTTP_PORT = 4619;
+
+  private HttpConfig getHttpConfig() {
+    HttpConfig httpConfig = configModel.getHttp();
+    if (httpConfig == null) {
+      log.info("No 'http' config section found. Falling back to default HTTP port {}.", DEFAULT_HTTP_PORT);
+      httpConfig = new HttpConfig(DEFAULT_HTTP_PORT, 0);
+    }
+    return httpConfig;
+  }
+
   private InsightFinderConfig getIFConfig() {
     return configModel.getInsightFinder();
   }
@@ -133,6 +145,18 @@ public class Config {
 
   public int getGrpcMaxInboundMessageSizeInKB() {
     int maxInboundMessageSizeInKB = getGrpcConfig().getMaxInboundMessageSizeInKB();
+    if (maxInboundMessageSizeInKB == 0) {
+      maxInboundMessageSizeInKB = 16 * 1024;
+    }
+    return maxInboundMessageSizeInKB;
+  }
+
+  public int getHttpPort() {
+    return getHttpConfig().getPort();
+  }
+
+  public int getHttpMaxInboundMessageSizeInKB() {
+    int maxInboundMessageSizeInKB = getHttpConfig().getMaxInboundMessageSizeInKB();
     if (maxInboundMessageSizeInKB == 0) {
       maxInboundMessageSizeInKB = 16 * 1024;
     }
