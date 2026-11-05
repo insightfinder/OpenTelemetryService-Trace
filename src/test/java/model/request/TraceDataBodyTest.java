@@ -125,4 +125,68 @@ public class TraceDataBodyTest {
 
     assertThat(trace.getSpans()).containsExactlyEntriesOf(expectedSpan);
   }
+
+  private SpanDataBody getTokenSpan(String id, String parentId, String traceEntity,
+      Integer totalTokens) {
+    Map<String, Object> attributes = new HashMap<>();
+    if (traceEntity != null) {
+      attributes.put("trace.entity", traceEntity);
+    }
+    if (totalTokens != null) {
+      attributes.put("total_tokens", totalTokens);
+    }
+    return SpanDataBody.builder().spanID(id).parentSpanId(parentId).attributes(attributes)
+        .build();
+  }
+
+  @Test
+  void onCallResultChildSpanTokensAreCounted() {
+    // On-call: the root ends at once with no tokens; the totals are on "oncall-task-result"
+    TraceDataBody trace = new TraceDataBody();
+    trace.addSpan(getTokenSpan("root", null, "chat-prompt-response", null));
+    trace.addSpan(getTokenSpan("result", "root", "chat-prompt-response", 470441));
+    assertThat(trace.getTotalToken()).isEqualTo(470441);
+  }
+
+  @Test
+  void agentInvocationChildSpanTokensAreNotCounted() {
+    // Keeps the double-count fix: agent spans repeat tokens already in the trace total
+    TraceDataBody trace = new TraceDataBody();
+    trace.addSpan(getTokenSpan("root", null, "chat-prompt-response", 100));
+    trace.addSpan(getTokenSpan("agent", "root", "agent-invocation", 100));
+    assertThat(trace.getTotalToken()).isEqualTo(100);
+  }
+
+  @Test
+  void childSpanWithoutTraceEntityIsNotCounted() {
+    TraceDataBody trace = new TraceDataBody();
+    trace.addSpan(getTokenSpan("root", null, null, 50));
+    trace.addSpan(getTokenSpan("llm", "root", null, 30));
+    assertThat(trace.getTotalToken()).isEqualTo(50);
+  }
+
+  @Test
+  void rootAndPromptResponseChildAreSummed() {
+    TraceDataBody trace = new TraceDataBody();
+    trace.addSpan(getTokenSpan("root", null, "chat-prompt-response", 10));
+    trace.addSpan(getTokenSpan("result", "root", "chat-prompt-response", 20));
+    assertThat(trace.getTotalToken()).isEqualTo(30);
+  }
+
+  @Test
+  void promptResponseChildWithoutTokensAddsNothing() {
+    TraceDataBody trace = new TraceDataBody();
+    trace.addSpan(getTokenSpan("root", null, "chat-prompt-response", 10));
+    trace.addSpan(getTokenSpan("result", "root", "chat-prompt-response", null));
+    assertThat(trace.getTotalToken()).isEqualTo(10);
+  }
+
+  @Test
+  void childSpanWithNullAttributesIsNotCounted() {
+    TraceDataBody trace = new TraceDataBody();
+    trace.addSpan(getTokenSpan("root", null, "chat-prompt-response", 10));
+    trace.addSpan(SpanDataBody.builder().spanID("c").parentSpanId("root").attributes(null)
+        .build());
+    assertThat(trace.getTotalToken()).isEqualTo(10);
+  }
 }
