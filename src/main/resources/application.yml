@@ -1,6 +1,9 @@
 grpc:
   port: 4618
   maxInboundMessageSizeInKB: 16384
+http:
+  port: 4619
+  maxInboundMessageSizeInKB: 16384
 insightFinder:
   serverUrl: https://stg.insightfinder.com
   serverUri: /api/v1/customprojectrawdata

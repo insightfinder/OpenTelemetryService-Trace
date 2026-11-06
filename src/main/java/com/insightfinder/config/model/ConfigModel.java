@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 public class ConfigModel {
 
   private GrpcConfig grpc;
+  private HttpConfig http;
   private InsightFinderConfig insightFinder;
   private JaegerConfig jaeger;
   private AppConfig app;

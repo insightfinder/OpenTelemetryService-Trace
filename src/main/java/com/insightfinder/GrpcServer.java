@@ -50,6 +50,8 @@ public class GrpcServer {
     server.start();
     log.info("OTLP Trace Receiver started at port {}", config.getGrpcPort());
 
+    new HttpServer().start();
+
     server.awaitTermination();
   }
 }
