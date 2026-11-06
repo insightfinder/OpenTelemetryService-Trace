@@ -13,6 +13,9 @@ import lombok.Data;
 @Data
 public class TraceDataBody {
 
+  private static final String TRACE_ENTITY_ATTRIBUTE = "trace.entity";
+  private static final String PROMPT_RESPONSE_ENTITY = "chat-prompt-response";
+
   @JSONField(name = "traceID")
   private String traceID;
 
@@ -54,10 +57,26 @@ public class TraceDataBody {
       }
       spans.put(span.getSpanID(), span);
     } else {
+      // Exception: a child span that is itself a prompt/response span holds the real total of
+      // its trace. An on-call investigation's root span ends the moment the run starts, so its
+      // tokens are only on the "oncall-task-result" child; skipping it left the trace at 0.
+      // Agent spans ("agent-invocation") stay excluded, which keeps the double-count fix above.
+      if (isPromptResponseSpan(span)) {
+        var spanTotalTokens = span.getTotalTokens();
+        if (spanTotalTokens != null) {
+          totalToken += spanTotalTokens;
+        }
+      }
       var childSpans = this.childSpans.getOrDefault(parentSpanId, new ArrayList<>());
       childSpans.add(span);
       this.childSpans.put(parentSpanId, childSpans);
     }
+  }
+
+  private static boolean isPromptResponseSpan(SpanDataBody span) {
+    var attributes = span.getAttributes();
+    return attributes != null
+        && PROMPT_RESPONSE_ENTITY.equals(attributes.get(TRACE_ENTITY_ATTRIBUTE));
   }
 
   public void composeSpanRelations(SpanOverwrite spanOverwrite) {
