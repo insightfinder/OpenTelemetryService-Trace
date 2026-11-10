@@ -19,7 +19,31 @@
     <native.maven.plugin.version>0.10.2</native.maven.plugin.version>
     <maven.compiler.source>${java.specification.version}</maven.compiler.source>
     <maven.compiler.target>${java.specification.version}</maven.compiler.target>
+    <!-- Netty version pinned for CVE fixes (AW-2503). All netty modules must share one version:
+         mixing 4.1.x netty-codec with 4.2.x netty-codec-base puts two copies of
+         io.netty.handler.codec.* in the fat jar and breaks the HTTP server (NoSuchMethodError). -->
+    <netty42.version>4.2.17.Final</netty42.version>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- All netty modules on one version -->
+      <dependency><groupId>io.netty</groupId><artifactId>netty-common</artifactId><version>${netty42.version}</version></dependency>
+      <dependency><groupId>io.netty</groupId><artifactId>netty-buffer</artifactId><version>${netty42.version}</version></dependency>
+      <dependency><groupId>io.netty</groupId><artifactId>netty-transport</artifactId><version>${netty42.version}</version></dependency>
+      <dependency><groupId>io.netty</groupId><artifactId>netty-resolver</artifactId><version>${netty42.version}</version></dependency>
+      <dependency><groupId>io.netty</groupId><artifactId>netty-codec-base</artifactId><version>${netty42.version}</version></dependency>
+      <dependency><groupId>io.netty</groupId><artifactId>netty-codec-compression</artifactId><version>${netty42.version}</version></dependency>
+      <dependency><groupId>io.netty</groupId><artifactId>netty-handler</artifactId><version>${netty42.version}</version></dependency>
+      <dependency><groupId>io.netty</groupId><artifactId>netty-codec-http</artifactId><version>${netty42.version}</version></dependency>
+      <dependency><groupId>io.netty</groupId><artifactId>netty-codec-http2</artifactId><version>${netty42.version}</version></dependency>
+      <!-- Pulled in by grpc-netty (declared as 4.1.x there); aligned to the same version -->
+      <dependency><groupId>io.netty</groupId><artifactId>netty-codec</artifactId><version>${netty42.version}</version></dependency>
+      <dependency><groupId>io.netty</groupId><artifactId>netty-handler-proxy</artifactId><version>${netty42.version}</version></dependency>
+      <dependency><groupId>io.netty</groupId><artifactId>netty-codec-socks</artifactId><version>${netty42.version}</version></dependency>
+      <dependency><groupId>io.netty</groupId><artifactId>netty-transport-native-unix-common</artifactId><version>${netty42.version}</version></dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
 
@@ -82,7 +106,7 @@
     <dependency>
       <artifactId>netty-codec-http2</artifactId>
       <groupId>io.netty</groupId>
-      <version>4.2.6.Final</version>
+      <version>${netty42.version}</version>
     </dependency>
 
     <dependency>
@@ -113,7 +137,7 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-codec-http</artifactId>
-      <version>4.2.6.Final</version>
+      <version>${netty42.version}</version>
     </dependency>
 
     <dependency>
