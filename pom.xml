@@ -23,6 +23,10 @@
          mixing 4.1.x netty-codec with 4.2.x netty-codec-base puts two copies of
          io.netty.handler.codec.* in the fat jar and breaks the HTTP server (NoSuchMethodError). -->
     <netty42.version>4.2.17.Final</netty42.version>
+    <!-- CVE fixes: logback-core (CVE-2024-12798, CVE-2025-11226, CVE-2024-12801, CVE-2026-10532,
+         CVE-2026-1225, CVE-2026-9828) and guava (CVE-2026-102554) -->
+    <logback.version>1.5.38</logback.version>
+    <guava.version>33.7.2-android</guava.version>
   </properties>
 
   <dependencyManagement>
@@ -42,6 +46,10 @@
       <dependency><groupId>io.netty</groupId><artifactId>netty-handler-proxy</artifactId><version>${netty42.version}</version></dependency>
       <dependency><groupId>io.netty</groupId><artifactId>netty-codec-socks</artifactId><version>${netty42.version}</version></dependency>
       <dependency><groupId>io.netty</groupId><artifactId>netty-transport-native-unix-common</artifactId><version>${netty42.version}</version></dependency>
+      <!-- logback-core must match logback-classic -->
+      <dependency><groupId>ch.qos.logback</groupId><artifactId>logback-core</artifactId><version>${logback.version}</version></dependency>
+      <!-- Pulled in by grpc (33.3.1-android there) -->
+      <dependency><groupId>com.google.guava</groupId><artifactId>guava</artifactId><version>${guava.version}</version></dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -87,7 +95,7 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.5.7</version>
+      <version>${logback.version}</version>
     </dependency>
 
     <dependency>
