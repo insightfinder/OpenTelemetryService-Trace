@@ -136,8 +136,6 @@ public class TraceDataMapper {
       traceDataBody.setTraceID(traceId);
       traceDataBody.setUsername(username);
 
-      // AW-2536: before composeSpanRelations, which may rename span ids the fallback walks
-      traceDataBody.applyOnCallPartialTokenTotal();
       traceDataBody.composeSpanRelations(spanOverwrite);
 
       for (ContentData promptContentData : promptPairs.values()) {
