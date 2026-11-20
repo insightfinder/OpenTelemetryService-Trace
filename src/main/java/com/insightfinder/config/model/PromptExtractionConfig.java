@@ -10,4 +10,5 @@ public class PromptExtractionConfig {
   private String processPath;
   private Set<String> processNames;
   private Map<String, PromptConfig> promptConfig;
+  private SplitSpanPromptConfig splitSpan;
 }
