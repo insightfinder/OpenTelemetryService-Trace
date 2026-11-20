@@ -8,6 +8,7 @@ import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
 import com.insightfinder.config.Config;
 import com.insightfinder.config.model.PromptConfig;
+import com.insightfinder.config.model.SplitSpanPromptConfig;
 import com.insightfinder.config.model.ValueMapping;
 import com.insightfinder.model.SpanOverwrite;
 import com.insightfinder.model.message.TraceInfo;
@@ -22,6 +23,7 @@ import com.insightfinder.service.SensitiveDataFilter;
 import com.insightfinder.util.ParseUtil;
 import com.insightfinder.util.TokenizerUtil;
 import io.opentelemetry.api.internal.StringUtils;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -73,6 +75,7 @@ public class TraceDataMapper {
       String overwriteTraceId = null;
       SpanOverwrite spanOverwrite = null;
       String sessionId = null;
+      List<SplitSpanMessage> splitSpanMessages = new ArrayList<>();
       for (int i = 0; i < rawSpans.size(); i++) {
         var curSpan = rawSpans.getJSONObject(i);
 
@@ -109,6 +112,9 @@ public class TraceDataMapper {
             if (StringUtils.isNullOrEmpty(sessionId)) {
               sessionId = spanInfo.getSessionId();
             }
+            if (spanInfo.getSplitSpanMessage() != null) {
+              splitSpanMessages.add(spanInfo.getSplitSpanMessage());
+            }
             var promptPair = spanInfo.getContentData();
             if (promptPair != null && !promptPair.isEmpty()) {
               var key = promptPair.getPromptHash();
@@ -128,6 +134,20 @@ public class TraceDataMapper {
           }
         }
       }
+      // Prompt and response on different spans (e.g. one span per chat message)
+      for (ContentData splitPair : SplitSpanPromptPairer.pair(splitSpanMessages,
+          getSplitSpanConfig())) {
+        var key = splitPair.getPromptHash();
+        if (key == null) {
+          continue;
+        }
+        var existingPromptPair = promptPairs.get(key);
+        if (existingPromptPair == null || splitPair.getInputPrompt().getDuration()
+            > existingPromptPair.getInputPrompt().getDuration()) {
+          promptPairs.put(key, splitPair);
+        }
+      }
+
       String traceId =
           StringUtils.isNullOrEmpty(overwriteTraceId) ? traceInfo.getTraceId() : overwriteTraceId;
       var processes = rawTrace.getJSONObject("processes");
@@ -298,6 +318,17 @@ public class TraceDataMapper {
     }
 
     SpanDataBody spanDataBody = spanDataBodyBuilder.build();
+
+    SplitSpanMessage splitSpanMessage = null;
+    try {
+      splitSpanMessage = SplitSpanPromptPairer.fromSpan(getSplitSpanConfig(), attributes,
+          spanDataBody.getSpanID(), spanDataBody.getStartTime(), spanDataBody.getDuration(),
+          parseTokenCount(attributes.get("prompt_tokens")),
+          parseTokenCount(attributes.get("response_tokens")));
+    } catch (Exception e) {
+      log.error("Error parsing split-span prompt/response: {}", e.getMessage());
+    }
+
     if (contentData != null) {
       contentData.setSpanId(spanDataBody.getSpanID());
       contentData.setDuration(spanDataBody.getDuration());
@@ -309,8 +340,14 @@ public class TraceDataMapper {
         .overwriteTraceId(overwriteTraceId)
         .contentData(contentData)
         .sessionId(sessionId)
-        .username(username);
+        .username(username)
+        .splitSpanMessage(splitSpanMessage);
     return spanInfoBuilder.build();
+  }
+
+  private SplitSpanPromptConfig getSplitSpanConfig() {
+    var promptExtractionConfig = config.getPromptExtraction();
+    return promptExtractionConfig == null ? null : promptExtractionConfig.getSplitSpan();
   }
 
   private void extractTokens(Map<String, Object> attributes) {
