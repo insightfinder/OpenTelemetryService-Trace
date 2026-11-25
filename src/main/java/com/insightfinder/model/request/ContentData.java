@@ -18,6 +18,8 @@ public class ContentData {
   private InputPrompt inputPrompt;
   private ResponseRecord responseRecord;
   private String sessionId;
+  /** The trace's "type" (its root span's attribute; optional, null when not sent), e.g. "news". */
+  private String traceType;
   private long traceStartTimestamp;
 
   public boolean isEmpty() {

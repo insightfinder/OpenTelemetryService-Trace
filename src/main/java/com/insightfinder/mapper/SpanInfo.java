@@ -14,5 +14,7 @@ public class SpanInfo {
   private final String username;
   private final String overwriteTraceId;
   private final String sessionId;
+  /** The span's "type" attribute (data.attrMapping.trace_type; optional), e.g. "news". */
+  private final String traceType;
   private final SplitSpanMessage splitSpanMessage;
 }

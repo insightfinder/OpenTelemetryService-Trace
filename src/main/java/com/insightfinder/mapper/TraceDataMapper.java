@@ -35,6 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 public class TraceDataMapper {
 
   private static TraceDataMapper instance;
+  /** Where the trace type is read from when data.attrMapping has no trace_type. */
+  static final ValueMapping DEFAULT_TRACE_TYPE = new ValueMapping(List.of("tags.type"));
   private static final Map<String, ValueMapping> valueMappings = Config.getInstance()
       .getAttrMapping();
   private static final Config config = Config.getInstance();
@@ -75,6 +77,8 @@ public class TraceDataMapper {
       String overwriteTraceId = null;
       SpanOverwrite spanOverwrite = null;
       String sessionId = null;
+      String traceType = null;  // the root span's (earliest start) "type" attribute
+      long rootStart = Long.MAX_VALUE;
       List<SplitSpanMessage> splitSpanMessages = new ArrayList<>();
       for (int i = 0; i < rawSpans.size(); i++) {
         var curSpan = rawSpans.getJSONObject(i);
@@ -111,6 +115,10 @@ public class TraceDataMapper {
             }
             if (StringUtils.isNullOrEmpty(sessionId)) {
               sessionId = spanInfo.getSessionId();
+            }
+            if (spanDataBody.getStartTime() < rootStart) {
+              rootStart = spanDataBody.getStartTime();
+              traceType = spanInfo.getTraceType();
             }
             if (spanInfo.getSplitSpanMessage() != null) {
               splitSpanMessages.add(spanInfo.getSplitSpanMessage());
@@ -165,6 +173,7 @@ public class TraceDataMapper {
         promptContentData.setUsername(traceDataBody.getUsername());
         promptContentData.setEntryOperation(entryOperation);
         promptContentData.setSessionId(sessionId);
+        promptContentData.setTraceType(traceType);
         promptContentData.setTraceStartTimestamp(traceDataBody.getStartTime());
       }
 
@@ -260,6 +269,13 @@ public class TraceDataMapper {
       log.error("Error parsing sessionId: {}", e.getMessage());
     }
 
+    String traceType = null;
+    try {
+      traceType = extractTraceType(attributes);
+    } catch (Exception e) {
+      log.error("Error parsing trace type: {}", e.getMessage());
+    }
+
     try {
       if (!config.useCustomTokenizer()) {
         extractTokens(attributes);
@@ -338,6 +354,7 @@ public class TraceDataMapper {
         .overwriteTraceId(overwriteTraceId)
         .contentData(contentData)
         .sessionId(sessionId)
+        .traceType(traceType)
         .username(username)
         .splitSpanMessage(splitSpanMessage);
     return spanInfoBuilder.build();
@@ -469,6 +486,21 @@ public class TraceDataMapper {
     } else {
       return (String) sessionId;
     }
+  }
+
+  /**
+   * The span's trace type, e.g. "news" (optional: null when the span has none). Read from
+   * data.attrMapping.trace_type when configured, else from the span attribute "type".
+   */
+  private String extractTraceType(Map<String, Object> attributes) {
+    var traceTypeValueMapping = valueMappings.get("trace_type");
+    var traceType = ParseUtil.getValueInAttrByPath(
+        traceTypeValueMapping != null ? traceTypeValueMapping : DEFAULT_TRACE_TYPE, attributes);
+    if (traceType == null) {
+      return null;
+    }
+    String value = String.valueOf(traceType).trim();
+    return value.isEmpty() ? null : value;
   }
 
   private ContentData extractPromptPair(Map<String, Object> attributes) {

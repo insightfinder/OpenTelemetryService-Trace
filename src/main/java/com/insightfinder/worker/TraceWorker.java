@@ -133,6 +133,7 @@ public class TraceWorker implements Runnable {
               .instanceName(cd.getInstanceName())
               .entryOperation(cd.getEntryOperation())
               .sessionId(cd.getSessionId())
+              .traceType(cd.getTraceType())
               .traceStartTimestamp(cd.getTraceStartTimestamp())
               .build());
     }
