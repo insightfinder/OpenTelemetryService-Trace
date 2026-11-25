@@ -67,6 +67,16 @@ data:
       output_prompt:
         fieldPath: "tags.chat.response"
         valuePath: ""
+    splitSpan:
+      enabled: true
+      typePath: "tags.type"
+      inputType: "user_message"
+      outputType: "agent_message"
+      inputField: "tags.content"
+      outputField: "tags.content"
+      orderPath: "tags.seq"
+      responseMode: "ALL_JOINED"
+      responseSeparator: "\n\n"
   unsuccessResponseExtraction:
     processPath: "tags.chat.response"
     processNames:
